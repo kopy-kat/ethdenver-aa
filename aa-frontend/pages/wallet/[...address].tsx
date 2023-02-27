@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import { GenericModal } from "@/components/atoms/GenericModal";
 import useSWR from "swr";
 import { fetcher } from "@/utils/common";
+import { useRouter } from "next/router";
 
 interface PluginProps {
   index: number;
@@ -179,6 +180,8 @@ const PluginItem: React.FC<PluginProps> = ({
 };
 
 export default function CreateWallet() {
+  const router = useRouter();
+  const { address } = router.query;
   const [availablePlugins, setAvailablePlugins] = useState<any[]>([]);
   const [selectedPlugins, setSelectedPlugins] = useState<any[]>([]);
   const [loadingComplete, setLoadingComplete] = useState<boolean>(false);
@@ -204,6 +207,12 @@ export default function CreateWallet() {
     setConfigModalPlugin(plugin);
     setShowConfigModal(true);
   }
+
+  useEffect(() => {
+    if (address) {
+      //fetch wallet and display plugins
+    }
+  }, [address]);
 
   useEffect(() => {
     if (plugins) {
