@@ -8,6 +8,8 @@ contract DeadmanSwitch {
     
     constructor(uint256 _timeout, address payable _recipient) {
         owner = msg.sender;
+
+        // Time in seconds
         timeout = _timeout;
         recipient = _recipient;
     }
@@ -17,8 +19,8 @@ contract DeadmanSwitch {
         _;
     }
     
-    function checkIn() public {
-        require(msg.sender == owner, "Only the owner can check in");
+    function checkIn() public onlyOwner{
+        // require(msg.sender == owner, "Only the owner can check in");
         lastCheckedIn = block.timestamp;
     }
     
@@ -28,6 +30,9 @@ contract DeadmanSwitch {
     
     function trigger() public {
         require(isTriggered(), "Switch has not been triggered");
+
+        // Transfer all the ETH at this address.
+        // Future work will do this for all ERC-20 tokens. 
         recipient.transfer(address(this).balance);
     }
     
