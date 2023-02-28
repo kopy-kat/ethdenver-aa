@@ -14,7 +14,6 @@ import { useState, useEffect } from "react";
 import { GenericModal } from "@/components/atoms/GenericModal";
 import useSWR from "swr";
 import { fetcher } from "@/utils/common";
-import { useRouter } from "next/router";
 
 interface PluginProps {
   index: number;
@@ -77,19 +76,26 @@ const PluginItem: React.FC<PluginProps> = ({
         onClick={showDetailModal}
       >
         <div className="flex flex-row items-center">
-          <img
-            src={plugin.icon}
-            className="w-10 h-10 rounded-full bg-transparent mr-1 p-1"
-            alt=""
-          />
+          {plugin.icon ? (
+            <img
+              src={plugin.icon}
+              className="w-10 h-10 rounded-full bg-transparent mr-2 p-1"
+              alt=""
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-transparent mr-2 p-1 bg-zinc-200" />
+          )}
           <div className="flex flex-col">
             <div className="text-lg font-semibold">{plugin.name}</div>
             <p className="mb-1 -mt-1 font-semibold">
-              {plugin.creator} | {plugin.usage} installs |{" "}
+              {plugin.creator} | {plugin.usage.toLocaleString()} installs |{" "}
               {[...Array(plugin.rating)].map((rating: any) => (
                 <span>⭐️</span>
               ))}{" "}
-              ({plugin.ratingAmount}) | {plugin.audits} Verified Audits
+              {plugin.ratingAmount != 0
+                ? "(" + plugin.ratingAmount + ") |"
+                : null}{" "}
+              {plugin.audits} Verified Audits
             </p>
             <div className={`${cardSubText} text-sm mb-1`}>
               {plugin.oneLiner.length > 80
@@ -144,19 +150,26 @@ const PluginItem: React.FC<PluginProps> = ({
           onClick={showDetailModal}
         >
           <div className="flex flex-row items-center">
-            <img
-              src={plugin.icon}
-              className="w-10 h-10 rounded-full bg-transparent mr-1 p-1"
-              alt=""
-            />
+            {plugin.icon ? (
+              <img
+                src={plugin.icon}
+                className="w-10 h-10 rounded-full bg-transparent mr-2 p-1"
+                alt=""
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-transparent mr-2 p-1 bg-zinc-200" />
+            )}
             <div className="flex flex-col">
               <div className="text-lg font-semibold">{plugin.name}</div>
               <p className="mb-1 -mt-1 font-semibold">
-                {plugin.creator} | {plugin.usage} installs |{" "}
+                {plugin.creator} | {plugin.usage.toLocaleString()} installs |{" "}
                 {[...Array(plugin.rating)].map((rating: any) => (
                   <span>⭐️</span>
                 ))}{" "}
-                ({plugin.ratingAmount}) | {plugin.audits} Verified Audits
+                {plugin.ratingAmount != 0
+                  ? "(" + plugin.ratingAmount + ") |"
+                  : null}{" "}
+                {plugin.audits} Verified Audits
               </p>
               <div className={`${cardSubText} text-sm mb-1`}>
                 {plugin.oneLiner.length > 80
@@ -180,8 +193,6 @@ const PluginItem: React.FC<PluginProps> = ({
 };
 
 export default function CreateWallet() {
-  const router = useRouter();
-  const { address } = router.query;
   const [availablePlugins, setAvailablePlugins] = useState<any[]>([]);
   const [selectedPlugins, setSelectedPlugins] = useState<any[]>([]);
   const [loadingComplete, setLoadingComplete] = useState<boolean>(false);
@@ -207,12 +218,6 @@ export default function CreateWallet() {
     setConfigModalPlugin(plugin);
     setShowConfigModal(true);
   }
-
-  useEffect(() => {
-    if (address) {
-      //fetch wallet and display plugins
-    }
-  }, [address]);
 
   useEffect(() => {
     if (plugins) {
@@ -447,13 +452,15 @@ export default function CreateWallet() {
             <div className="mb-4">
               <h3 className="font-bold text-4xl">{detailModalPlugin.name}</h3>
               <p className="mt-2 text-lg font-semibold">
-                {detailModalPlugin.creator} | {detailModalPlugin.usage} installs
-                |{" "}
+                {detailModalPlugin.creator} |{" "}
+                {detailModalPlugin.usage.toLocaleString()} installs |{" "}
                 {[...Array(detailModalPlugin.rating)].map((rating: any) => (
                   <span>⭐️</span>
                 ))}{" "}
-                ({detailModalPlugin.ratingAmount}) | {detailModalPlugin.audits}{" "}
-                Verified Audits
+                {detailModalPlugin.ratingAmount != 0
+                  ? "(" + detailModalPlugin.ratingAmount + ") |"
+                  : null}{" "}
+                {detailModalPlugin.audits} Verified Audits
               </p>
             </div>
             <div className="flex flex-row pt-2">
@@ -536,7 +543,7 @@ export default function CreateWallet() {
       {/* PLUGIN CONFIG MODAL */}
       {showConfigModal && (
         <GenericModal
-          title={"Finish configuring " + configModalPlugin.name}
+          title={configModalPlugin.name + " config"}
           closeModal={() => setShowConfigModal(false)}
         >
           <div className="px-6 py-4">Text here</div>

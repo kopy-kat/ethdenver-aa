@@ -14,7 +14,7 @@ export function Footer({
     <footer className={`mb-0 bottom ${backgroundColor} ${textColor} px-12`}>
       <div className="flex items-center justify-between px-12 py-10">
         <div className="font-semibold text-zinc-900">
-          <div className="">Made with ❤️ by the Oxford Team.</div>
+          <div className="">Made with ❤️ by the Oxford Abstractooooooors.</div>
         </div>
       </div>
     </footer>
