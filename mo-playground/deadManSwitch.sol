@@ -1,14 +1,20 @@
 pragma solidity ^0.8.0;
 
-contract DeadMansSwitch {
+contract DeadmanSwitch {
     address public owner;
     uint256 public lastCheckedIn;
     uint256 public timeout;
-    address payable public recipient = 0x15656be2D537D51BA61dAEb70bfBEaE7ae686342;
+    address payable public recipient;
     
-    constructor(uint256 _timeout) {
+    constructor(uint256 _timeout, address payable _recipient) {
         owner = msg.sender;
         timeout = _timeout;
+        recipient = _recipient;
+    }
+    
+    modifier onlyOwner {
+        require(msg.sender == owner, "Only the owner can perform this action");
+        _;
     }
     
     function checkIn() public {
@@ -22,7 +28,10 @@ contract DeadMansSwitch {
     
     function trigger() public {
         require(isTriggered(), "Switch has not been triggered");
-        // Transer money to Ponzi.vc
         recipient.transfer(address(this).balance);
+    }
+    
+    function setRecipient(address payable _recipient) public onlyOwner {
+        recipient = _recipient;
     }
 }
