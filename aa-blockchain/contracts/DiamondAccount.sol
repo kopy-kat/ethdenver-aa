@@ -11,8 +11,9 @@ import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
 import { IDiamondLoupe } from  "./interfaces/IDiamondLoupe.sol";
 import { IERC173 } from "./interfaces/IERC173.sol";
 import { IERC165} from "./interfaces/IERC165.sol";
-import "./BaseAccount.sol";
-
+import {BaseAccount} from "./BaseAccount.sol";
+import {IEntryPoint} from "./interfaces/IEntryPoint.sol";
+import {UserOperation} from "./interfaces/UserOperation.sol";
 // When no function exists for function called
 error FunctionNotFound(bytes4 _functionSelector);
 
@@ -197,7 +198,7 @@ contract SimpleAccount is BaseAccount {
         entryPoint().withdrawTo(withdrawAddress, amount);
     }
 
-    function _authorizeUpgrade(address newImplementation) internal view override {
+    function _authorizeUpgrade(address newImplementation) internal view  {
         (newImplementation);
         _onlyOwner();
     }
