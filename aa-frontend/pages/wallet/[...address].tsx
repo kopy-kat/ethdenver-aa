@@ -89,7 +89,7 @@ const PluginItem: React.FC<PluginProps> = ({
               {[...Array(plugin.rating)].map((rating: any) => (
                 <span>⭐️</span>
               ))}{" "}
-              ({plugin.ratingAmout}) | {plugin.audits} Verified Audits
+              ({plugin.ratingAmount}) | {plugin.audits} Verified Audits
             </p>
             <div className={`${cardSubText} text-sm mb-1`}>
               {plugin.oneLiner.length > 80
@@ -156,7 +156,7 @@ const PluginItem: React.FC<PluginProps> = ({
                 {[...Array(plugin.rating)].map((rating: any) => (
                   <span>⭐️</span>
                 ))}{" "}
-                ({plugin.ratingAmout}) | {plugin.audits} Verified Audits
+                ({plugin.ratingAmount}) | {plugin.audits} Verified Audits
               </p>
               <div className={`${cardSubText} text-sm mb-1`}>
                 {plugin.oneLiner.length > 80
@@ -452,7 +452,7 @@ export default function CreateWallet() {
                 {[...Array(detailModalPlugin.rating)].map((rating: any) => (
                   <span>⭐️</span>
                 ))}{" "}
-                ({detailModalPlugin.ratingAmout}) | {detailModalPlugin.audits}{" "}
+                ({detailModalPlugin.ratingAmount}) | {detailModalPlugin.audits}{" "}
                 Verified Audits
               </p>
             </div>

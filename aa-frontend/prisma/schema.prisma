@@ -58,7 +58,7 @@ model Plugin {
   rating           Int
   ratingAmount     Int
   audits           Int
-  usage            String
+  usage            Int    @default(0)
   contractAddress  String
   chains           Chain[]
   tippingAddress   String
