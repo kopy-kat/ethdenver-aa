@@ -7,6 +7,7 @@ contract RetirementSavings {
     struct DiamondStorage {
         uint256 percentage;
         uint256 savedAmount;
+        
 
     }
 

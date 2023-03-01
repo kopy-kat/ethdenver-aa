@@ -29,10 +29,12 @@ struct DiamondArgs {
 contract Diamond {    
 
     constructor(IDiamondCut.FacetCut[] memory _diamondCut, DiamondArgs memory _args) payable {
-        LibDiamond.setContractOwner(_args.owner);
+        // We don't need to set a contrat owner, that's handled by the verify function and entryPoint
+        // LibDiamond.setContractOwner(_args.owner);
         LibDiamond.diamondCut(_diamondCut, _args.init, _args.initCalldata);
 
         // Code can be added here to perform actions and set state variables.
+        
     }
 
     // Find facet for function that is called and execute the
@@ -45,15 +47,13 @@ contract Diamond {
             ds.slot := position
         }
         // get facet from function selector
-        address facet = ds.facetAddressAndSelectorPosition[msg.sig].facetAddress;
-        if(facet == address(0)) {
-            revert FunctionNotFound(msg.sig);
-        }
+        address facet = ds.selectorToFacetAndPosition[msg.sig].facetAddress;
+        require(facet != address(0), "Diamond: Function does not exist");
         // Execute external function from facet using delegatecall and return any value.
         assembly {
             // copy function selector and any arguments
             calldatacopy(0, 0, calldatasize())
-             // execute function call using the facet
+            // execute function call using the facet
             let result := delegatecall(gas(), facet, 0, calldatasize(), 0, 0)
             // get any return value
             returndatacopy(0, 0, returndatasize())
