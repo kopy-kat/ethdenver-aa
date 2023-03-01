@@ -5,12 +5,14 @@ contract Donation {
     uint256 public receivedETH;
     uint256 public spentETH;
     uint256 public lastCalculation;
+    uint256 public period;
     uint256 public donationPercentage;
     address payable public donationRecipient;
     
-    constructor(uint256 _donationPercentage, address payable _donationRecipient) {
+    constructor(uint256 _period, uint256 _donationPercentage, address payable _donationRecipient) {
         owner = msg.sender;
         lastCalculation = block.timestamp;
+        period = _period;
         donationPercentage = _donationPercentage;
         donationRecipient = _donationRecipient;
     }
@@ -29,6 +31,10 @@ contract Donation {
         donationRecipient = _recipient;
     }
     
+    function setPeriod(uint256 _period) public onlyOwner {
+        period = _period;
+    }
+    
     function receive() external payable {
         receivedETH += msg.value;
     }
@@ -42,10 +48,8 @@ contract Donation {
     function calculateProfit() internal returns (int256) {
         uint256 currentTimestamp = block.timestamp;
         uint256 timeElapsed = currentTimestamp - lastCalculation;
-        if (timeElapsed < 86400) {
-            // 24 hours haven't passed yet
-            // We can change this to be any number
-            // Should the number be user decided? or Hardcoded?
+        if (timeElapsed < period) {
+            // Not enough time has elapsed
             return 0;
         }
         lastCalculation = currentTimestamp;
