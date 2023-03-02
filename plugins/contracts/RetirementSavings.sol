@@ -1,24 +1,29 @@
 pragma solidity ^0.8.0;
+import { LibDiamond } from "./libraries/LibDiamond.sol";
+
 
 contract RetirementSavings {
-    address public owner;
-    uint256 public percentage;
-    uint256 public savedAmount;
-    
-    constructor(uint256 _percentage) {
-        owner = msg.sender;
-        percentage = _percentage;
+
+    struct DiamondStorage {
+        uint256 percentage;
+        uint256 savedAmount;
+        
+
+    }
+
+    function getStorage() DiamondStorage internal pure returns (DiamondStorage storage ds) {
+        bytes32 position = keccak256("diamond.standard.retirementSavings");
+        assembly {
+            ds.slot := position
+        }
+    }
+
+    function setPercentage(uint256 _percentage) public {
+        LibDiamond.enforceIsContractOwner();
+        DiamondStorage storage ds = getStorage();
+        ds.percentage = _percentage;
     }
     
-    modifier onlyOwner {
-        require(msg.sender == owner, "Only the owner can perform this action");
-        _;
-    }
-    
-    function setPercentage(uint256 _percentage) public onlyOwner {
-        require(_percentage <= 100, "Percentage must be less than or equal to 100");
-        percentage = _percentage;
-    }
     
     function save() external payable {
         require(msg.value > 0, "Amount must be greater than 0");
@@ -26,7 +31,8 @@ contract RetirementSavings {
         savedAmount += saveAmount;
     }
     
-    function withdraw(address payable _recipient) public onlyOwner {
+    function withdraw(address payable _recipient) public {
+        LibDiamond.enforceIsContractOwner();
         _recipient.transfer(savedAmount);
         savedAmount = 0;
     }

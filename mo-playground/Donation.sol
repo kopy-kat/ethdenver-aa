@@ -1,28 +1,73 @@
 pragma solidity ^0.8.0;
 
 contract Donation {
-    uint256 public totalReceived;
-    uint256 public totalSpent;
-    uint256 public lastCheckTime;
+    address public owner;
+    uint256 public receivedETH;
+    uint256 public spentETH;
+    uint256 public lastCalculation;
+    uint256 public period;
+    uint256 public donationPercentage;
+    address payable public donationRecipient;
     
-    // Add modifier instead of a hard-coded address
-    address payable public recipient = 0x15656be2D537D51BA61dAEb70bfBEaE7ae686342;
+    constructor(uint256 _period, uint256 _donationPercentage, address payable _donationRecipient) {
+        owner = msg.sender;
+        lastCalculation = block.timestamp;
+        period = _period;
+        donationPercentage = _donationPercentage;
+        donationRecipient = _donationRecipient;
+    }
+    
+    modifier onlyOwner {
+        require(msg.sender == owner, "Only the owner can perform this action");
+        _;
+    }
+    
+    function setDonationPercentage(uint256 _percentage) public onlyOwner {
+        require(_percentage <= 100, "Percentage must be less than or equal to 100");
+        donationPercentage = _percentage;
+    }
+    
+    function setDonationRecipient(address payable _recipient) public onlyOwner {
+        donationRecipient = _recipient;
+    }
+    
+    function setPeriod(uint256 _period) public onlyOwner {
+        period = _period;
+    }
     
     function receive() external payable {
-        totalReceived += msg.value;
+        receivedETH += msg.value;
     }
     
-    function spend(uint256 amount) external {
-        totalSpent += amount;
+    function spend(uint256 _amount) external {
+        require(_amount <= address(this).balance, "Not enough funds available");
+        spentETH += _amount;
+        payable(msg.sender).transfer(_amount);
     }
     
-    function donate() external {
-        require(block.timestamp >= lastCheckTime + 24 hours, "24 hours have not elapsed yet");
-        uint256 profit = totalReceived - totalSpent;
-        require(profit > 0, "No profit to donate");
-        uint256 donationAmount = profit / 100;
-        recipient.transfer(donationAmount);
-        lastCheckTime = block.timestamp;
+    function calculateProfit() internal returns (int256) {
+        uint256 currentTimestamp = block.timestamp;
+        uint256 timeElapsed = currentTimestamp - lastCalculation;
+        if (timeElapsed < period) {
+            // Not enough time has elapsed
+            return 0;
+        }
+        lastCalculation = currentTimestamp;
+        int256 profit = int256(receivedETH) - int256(spentETH);
+        if (profit <= 0) {
+            // No profit to donate
+            return 0;
+        }
+        uint256 donationAmount = uint256(profit * int256(donationPercentage) / 100);
+        donationRecipient.transfer(donationAmount);
+        return int256(donationAmount);
+    }
+    
+    function withdraw(address payable _recipient) public onlyOwner {
+        int256 donationAmount = calculateProfit();
+        _recipient.transfer(address(this).balance);
+        if (donationAmount > 0) {
+            receivedETH -= uint256(donationAmount);
+        }
     }
 }
-

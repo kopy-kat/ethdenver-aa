@@ -8,6 +8,7 @@ pragma solidity ^0.8.12;
 import "./interfaces/IAccount.sol";
 import "./interfaces/IEntryPoint.sol";
 import "./Helpers.sol";
+import {LibDiamond} from "./libraries/LibDiamond.sol";
 import "./Diamond.sol";
 
 /**
@@ -28,11 +29,7 @@ abstract contract BaseAccount is IAccount {
      */
     function nonce() public view virtual returns (uint256);
 
-    /**
-     * return the entryPoint used by this account.
-     * subclass should return the current entryPoint used by this account.
-     */
-    function entryPoint() public view virtual returns (IEntryPoint);
+    
 
     /**
      * Validate user's signature and nonce.
@@ -40,7 +37,7 @@ abstract contract BaseAccount is IAccount {
      */
     function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
     external override virtual returns (uint256 validationData) {
-        _requireFromEntryPoint();
+        LibDiamond.enforceIsEntryPoint();
         validationData = _validateSignature(userOp, userOpHash);
         if (userOp.initCode.length == 0) {
             _validateAndUpdateNonce(userOp);
@@ -48,12 +45,7 @@ abstract contract BaseAccount is IAccount {
         _payPrefund(missingAccountFunds);
     }
 
-    /**
-     * ensure the request comes from the known entrypoint.
-     */
-    function _requireFromEntryPoint() internal virtual view {
-        require(msg.sender == address(entryPoint()), "account: not from EntryPoint");
-    }
+
 
     /**
      * validate the signature is valid for this message.

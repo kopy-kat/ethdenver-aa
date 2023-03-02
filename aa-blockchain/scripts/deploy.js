@@ -1,31 +1,83 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
-// will compile your contracts, add the Hardhat Runtime Environment's members to the
-// global scope, and execute the script.
-const hre = require("hardhat");
+/* global ethers */
+/* eslint prefer-const: "off" */
 
-async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-  const unlockTime = currentTimestampInSeconds + ONE_YEAR_IN_SECS;
+const { getSelectors, FacetCutAction } = require('./libraries/diamond.js')
 
-  const lockedAmount = hre.ethers.utils.parseEther("1");
 
-  const Lock = await hre.ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+async function deployDiamond () {
+  const accounts = await ethers.getSigners()
+  const contractOwner = accounts[0]
 
-  await lock.deployed();
+  const entryPointAddress = '0x0F46c65C17AA6b4102046935F33301f0510B163A'
 
-  console.log(
-    `Lock with 1 ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
-  );
+  // deploy DiamondCutFacet
+  const DiamondCutFacet = await ethers.getContractFactory('DiamondCutFacet')
+  const diamondCutFacet = await DiamondCutFacet.deploy()
+  await diamondCutFacet.deployed()
+  console.log('DiamondCutFacet deployed:', diamondCutFacet.address)
+
+  // deploy DiamondAccount
+  const DiamondAccount = await ethers.getContractFactory('DiamondAccount')
+  const diamondAccount = await DiamondAccount.deploy(entryPointAddress, contractOwner.address, diamondCutFacet.address)
+  await diamondAccount.deployed()
+  console.log('DiamondAccount deployed:', diamond.address)
+
+  // deploy DiamondInit
+  // DiamondInit provides a function that is called when the diamond is upgraded to initialize state variables
+  // Read about how the diamondCut function works here: https://eips.ethereum.org/EIPS/eip-2535#addingreplacingremoving-functions
+  const DiamondInit = await ethers.getContractFactory('DiamondInit')
+  const diamondInit = await DiamondInit.deploy()
+  await diamondInit.deployed()
+  console.log('DiamondInit deployed:', diamondInit.address)
+
+  // deploy facets
+  console.log('')
+  console.log('Deploying facets')
+  const FacetNames = [
+    'DiamondLoupeFacet',
+    'OwnershipFacet'
+  ]
+
+  const cut = []
+  for (const FacetName of FacetNames) {
+    const Facet = await ethers.getContractFactory(FacetName)
+    const facet = await Facet.deploy()
+    await facet.deployed()
+    console.log(`${FacetName} deployed: ${facet.address}`)
+    cut.push({
+      facetAddress: facet.address,
+      action: FacetCutAction.Add,
+      functionSelectors: getSelectors(facet)
+    })
+  }
+
+  // upgrade diamond with facets
+  console.log('')
+  console.log('Diamond Cut:', cut)
+  const diamondCut = await ethers.getContractAt('IDiamondCut', diamondAccount.address)
+  let tx
+  let receipt
+  // call to init function
+  let functionCall = diamondInit.interface.encodeFunctionData('init')
+  tx = await diamondCut.diamondCut(cut, diamondInit.address, functionCall)
+  console.log('Diamond cut tx: ', tx.hash)
+  receipt = await tx.wait()
+  if (!receipt.status) {
+    throw Error(`Diamond upgrade failed: ${tx.hash}`)
+  }
+  console.log('Completed diamond cut')
+  return diamond.address
 }
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  deployDiamond()
+    .then(() => process.exit(0))
+    .catch(error => {
+      console.error(error)
+      process.exit(1)
+    })
+}
+
+exports.deployDiamond = deployDiamond
