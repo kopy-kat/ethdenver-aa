@@ -15,20 +15,13 @@ interface LayoutProps {
   footerTextColor?: string;
 }
 
-export function Layout({ children }: { children: React.ReactNode }) {
-  const [emailError, setEmailError] = useState<boolean>(false);
-  const [submissionError, setSubmissionError] = useState<boolean>(false);
-  const [signupLoading, setSignupLoading] = useState<boolean>(false);
-
-  const [email, setEmail] = useState<string>("");
-  const [firstName, setFirstName] = useState<string>("");
-  const [lastName, setLastName] = useState<string>("");
-
-  function resetForm() {
-    setEmailError(false);
-    setSubmissionError(false);
-  }
-
+export function Layout({
+  children,
+  outsideOfBoxChildren,
+}: {
+  children: React.ReactNode;
+  outsideOfBoxChildren?: React.ReactNode;
+}) {
   return (
     <main className="">
       <div className="pt-14 transition-position max-w-screen min-h-screen bg-gray-50 hidden md:flex flex-row">
@@ -37,9 +30,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <section className="mx-auto">
               <Header />
             </section>
-            <section className="bg-white rounded-3xl py-2 mt-8 md:mr-2 lg:mr-3 xl:mr-6">
+            <section className="bg-white rounded-3xl py-2 mt-8">
               <div className="mx-auto">{children}</div>
             </section>
+            <section>{outsideOfBoxChildren}</section>
           </section>
           <section className="container">
             <Footer />

@@ -32,7 +32,7 @@ export default async function handler(
         oneLiner: body.oneLiner,
         version: body.version,
         icon: body.icon,
-        creator: "creator.eth",
+        creator: "abstractoor.eth",
         rating: 0,
         ratingAmount: 0,
         audits: 0,

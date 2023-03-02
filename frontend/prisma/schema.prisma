@@ -46,26 +46,37 @@ model PluginCode {
   Plugin  Plugin[]
 }
 
+model PluginConfigRequirement {
+  id          Int     @id @default(autoincrement())
+  name        String
+  placeholder String?
+  type        String
+  options     Json?
+  Plugin      Plugin  @relation(fields: [pluginId], references: [id])
+  pluginId    Int
+}
+
 model Plugin {
-  id               Int            @id @default(autoincrement())
-  name             String
-  description      String
-  oneLiner         String
-  version          String
-  icon             String
-  creator          String
-  category         PluginCategory @relation(fields: [pluginCategoryId], references: [id])
-  rating           Int
-  ratingAmount     Int
-  audits           Int
-  usage            Int    @default(0)
-  contractAddress  String
-  chains           Chain[]
-  tippingAddress   String
-  reviews          PluginReview[]
-  code             PluginCode     @relation(fields: [pluginCodeId], references: [id])
-  pluginCategoryId Int
-  pluginCodeId     Int
+  id                      Int                       @id @default(autoincrement())
+  name                    String
+  description             String
+  oneLiner                String
+  version                 String
+  icon                    String
+  creator                 String
+  category                PluginCategory            @relation(fields: [pluginCategoryId], references: [id])
+  rating                  Int
+  ratingAmount            Int
+  audits                  Int
+  usage                   Int                       @default(0)
+  contractAddress         String
+  chains                  Chain[]
+  tippingAddress          String
+  reviews                 PluginReview[]
+  code                    PluginCode                @relation(fields: [pluginCodeId], references: [id])
+  pluginCategoryId        Int
+  pluginCodeId            Int
+  PluginConfigRequirement PluginConfigRequirement[]
 }
 
 model SmartWallet {

@@ -8,7 +8,8 @@ export function InputForm({
   helpText,
   required = false,
   requiredStar = false,
-  step = undefined
+  step = undefined,
+  defaultValue
 }: {
   label: string;
   inputType: string;
@@ -17,7 +18,8 @@ export function InputForm({
   helpText?: React.ReactNode;
   required?: boolean;
   requiredStar?: boolean;
-  step?: number
+  step?: number;
+  defaultValue?: string;
 }) {
   return (
     <>
@@ -28,6 +30,7 @@ export function InputForm({
         name={inputName}
         step={step}
         required={required}
+        defaultValue={defaultValue ? defaultValue : undefined}
       />
       {helpText && (
         <small className="ml-1 mt-2 text-zinc-700">{helpText}</small>

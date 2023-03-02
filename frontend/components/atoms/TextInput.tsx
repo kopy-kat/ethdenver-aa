@@ -3,13 +3,15 @@ export function TextInput({
     placeholder,
     name,
     required,
-    step
+    step,
+    defaultValue = undefined,
 }: {
     inputType: string;
     placeholder: string;
     name: string;
     required: boolean;
     step?: number
+    defaultValue?: string | undefined;
 }) {
   return (
     <input
@@ -19,6 +21,7 @@ export function TextInput({
       name={name}
       step={step}
       required={required}
+      defaultValue={defaultValue ? defaultValue : ""}
     />
   );
 }

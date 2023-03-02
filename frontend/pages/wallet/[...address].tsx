@@ -14,7 +14,10 @@ import { useState, useEffect } from "react";
 import { GenericModal } from "@/components/atoms/GenericModal";
 import useSWR from "swr";
 import { fetcher } from "@/utils/common";
-import { useRouter } from "next/router";
+import { InputForm } from "@/components/molecules/InputForm";
+import { TextareaForm } from "@/components/molecules/TextareaForm";
+import { DropdownForm } from "@/components/molecules/DropdownForm";
+import { MultiselectForm } from "@/components/molecules/MultiselectForm";
 
 interface PluginProps {
   index: number;
@@ -77,19 +80,26 @@ const PluginItem: React.FC<PluginProps> = ({
         onClick={showDetailModal}
       >
         <div className="flex flex-row items-center">
-          <img
-            src={plugin.icon}
-            className="w-10 h-10 rounded-full bg-transparent mr-1 p-1"
-            alt=""
-          />
+          {plugin.icon ? (
+            <img
+              src={plugin.icon}
+              className="w-10 h-10 rounded-full bg-transparent mr-2 p-1"
+              alt=""
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full mr-2 p-1 bg-zinc-300" />
+          )}
           <div className="flex flex-col">
             <div className="text-lg font-semibold">{plugin.name}</div>
             <p className="mb-1 -mt-1 font-semibold">
               {plugin.creator} | {plugin.usage.toLocaleString()} installs |{" "}
-              {[...Array(plugin.rating)].map((rating: any) => (
-                <span>⭐️</span>
+              {[...Array(plugin.rating)].map((rating: any, index: number) => (
+                <span key={index}>⭐️</span>
               ))}{" "}
-              ({plugin.ratingAmount}) | {plugin.audits} Verified Audits
+              {plugin.ratingAmount != 0
+                ? "(" + plugin.ratingAmount + ") |"
+                : null}{" "}
+              {plugin.audits} Verified Audits
             </p>
             <div className={`${cardSubText} text-sm mb-1`}>
               {plugin.oneLiner.length > 80
@@ -107,14 +117,16 @@ const PluginItem: React.FC<PluginProps> = ({
           >
             <TiInfoLarge size={35} />
           </Button> */}
-          <Button
-            onClick={openConfigModal}
-            backgroundColor={buttonBackground}
-            textColor={buttonText}
-            additionalClasses="rounded-full w-10 h-10 p-1 mx-1"
-          >
-            <MdEdit size={35} />
-          </Button>
+          {plugin.requirements.length ? (
+            <Button
+              onClick={openConfigModal}
+              backgroundColor={buttonBackground}
+              textColor={buttonText}
+              additionalClasses="rounded-full w-10 h-10 p-1 mx-1"
+            >
+              <MdEdit size={35} />
+            </Button>
+          ) : null}
           <Button
             onClick={
               removeSelectedPlugin
@@ -144,19 +156,26 @@ const PluginItem: React.FC<PluginProps> = ({
           onClick={showDetailModal}
         >
           <div className="flex flex-row items-center">
-            <img
-              src={plugin.icon}
-              className="w-10 h-10 rounded-full bg-transparent mr-1 p-1"
-              alt=""
-            />
+            {plugin.icon ? (
+              <img
+                src={plugin.icon}
+                className="w-10 h-10 rounded-full bg-transparent mr-2 p-1"
+                alt=""
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full mr-2 p-1 bg-zinc-300" />
+            )}
             <div className="flex flex-col">
               <div className="text-lg font-semibold">{plugin.name}</div>
               <p className="mb-1 -mt-1 font-semibold">
                 {plugin.creator} | {plugin.usage.toLocaleString()} installs |{" "}
-                {[...Array(plugin.rating)].map((rating: any) => (
-                  <span>⭐️</span>
+                {[...Array(plugin.rating)].map((rating: any, index: number) => (
+                  <span key={index}>⭐️</span>
                 ))}{" "}
-                ({plugin.ratingAmount}) | {plugin.audits} Verified Audits
+                {plugin.ratingAmount != 0
+                  ? "(" + plugin.ratingAmount + ") |"
+                  : null}{" "}
+                {plugin.audits} Verified Audits
               </p>
               <div className={`${cardSubText} text-sm mb-1`}>
                 {plugin.oneLiner.length > 80
@@ -180,11 +199,12 @@ const PluginItem: React.FC<PluginProps> = ({
 };
 
 export default function CreateWallet() {
-  const router = useRouter();
-  const { address } = router.query;
   const [availablePlugins, setAvailablePlugins] = useState<any[]>([]);
   const [selectedPlugins, setSelectedPlugins] = useState<any[]>([]);
   const [loadingComplete, setLoadingComplete] = useState<boolean>(false);
+  const [categoryConfigs, setCategoryConfigs] = useState<any>({});
+  const [creatingWallet, setCreatingWallet] = useState<boolean>(false);
+  const [walletCreated, setWalletCreated] = useState<boolean>(false);
 
   const { data: categories } = useSWR("/api/get-plugin-categories", fetcher);
   const { data: plugins } = useSWR("/api/get-plugins", fetcher);
@@ -207,12 +227,6 @@ export default function CreateWallet() {
     setConfigModalPlugin(plugin);
     setShowConfigModal(true);
   }
-
-  useEffect(() => {
-    if (address) {
-      //fetch wallet and display plugins
-    }
-  }, [address]);
 
   useEffect(() => {
     if (plugins) {
@@ -254,8 +268,42 @@ export default function CreateWallet() {
     setSelectedPlugins(selectedPlugins);
   };
 
+  function saveConfig(form: any, plugin: any) {
+    form.preventDefault();
+    const modCategoryConfigs = { ...categoryConfigs };
+    modCategoryConfigs[plugin.id] = {};
+    for (let i = 0; i < form.target.length; i++) {
+      if (form.target[i].name) {
+        const id = plugin.requirements.find(
+          (req: any) =>
+            req.name.replace(/\s+/g, "-").toLowerCase() === form.target[i].name
+        ).id;
+        modCategoryConfigs[plugin.id][id] = form.target[i].value;
+      }
+    }
+    setCategoryConfigs(modCategoryConfigs);
+    setShowConfigModal(false);
+  }
+
+  function createWallet() {
+    setCreatingWallet(true);
+    setWalletCreated(true);
+  }
+
   return (
-    <Layout>
+    <Layout
+      outsideOfBoxChildren={
+        <Button
+          onClick={createWallet}
+          backgroundColor={"bg-blue-600"}
+          textColor={"text-zinc-100"}
+          additionalClasses="px-6 py-1 mt-8 mx-auto w-1/4"
+          loading={creatingWallet}
+        >
+          Create wallet
+        </Button>
+      }
+    >
       <div className="flex flex-row">
         <DragDropContext onDragEnd={onDragEndHandler}>
           <section className="w-1/2 px-6 py-8 border-r border-zinc-200">
@@ -291,6 +339,7 @@ export default function CreateWallet() {
                                           openDetailModal(plugin)
                                         }
                                         selected={false}
+                                        key={index}
                                       />
                                     )
                                 )
@@ -314,9 +363,10 @@ export default function CreateWallet() {
                       <h4 className="font-semibold text-base mb-2 mt-2 ml-1 bg-zinc-200 text-zinc-200 rounded-2xl animate-pulse w-fit select-none">
                         Placeholder
                       </h4>
-                      {[0, 0].map((el) => (
+                      {[0, 0].map((el: any, index: number) => (
                         <div
                           className={`flex flex-row justify-between items-center rounded-2xl px-4 py-3 my-2 hover:cursor-pointer hover:scale-105 transition duration-300 bg-zinc-100 select-none border border-zinc-200`}
+                          key={index}
                         >
                           <div className="flex flex-row items-center">
                             <div className="w-10 h-10 rounded-full bg-zinc-200 animate-pulse mr-1 p-1" />
@@ -370,6 +420,7 @@ export default function CreateWallet() {
                                       plugin.pluginCategoryId && (
                                       <PluginItem
                                         index={index}
+                                        key={index}
                                         plugin={plugin}
                                         pluginCategory={pluginCategory}
                                         showDetailModal={(e: any) =>
@@ -405,9 +456,10 @@ export default function CreateWallet() {
                       <h4 className="font-semibold text-base mb-2 mt-2 ml-1 bg-zinc-200 text-zinc-200 rounded-2xl animate-pulse w-fit select-none">
                         Placeholder
                       </h4>
-                      {[0, 0].map((el) => (
+                      {[0, 0].map((el: any, index: number) => (
                         <div
                           className={`flex flex-row justify-between items-center rounded-2xl px-4 py-3 my-2 hover:cursor-pointer hover:scale-105 transition duration-300 bg-zinc-100 select-none border border-zinc-200`}
+                          key={index}
                         >
                           <div className="flex flex-row items-center">
                             <div className="w-10 h-10 rounded-full bg-zinc-200 animate-pulse mr-1 p-1" />
@@ -447,13 +499,17 @@ export default function CreateWallet() {
             <div className="mb-4">
               <h3 className="font-bold text-4xl">{detailModalPlugin.name}</h3>
               <p className="mt-2 text-lg font-semibold">
-                {detailModalPlugin.creator} | {detailModalPlugin.usage.toLocaleString().toLocaleString()} installs
-                |{" "}
-                {[...Array(detailModalPlugin.rating)].map((rating: any) => (
-                  <span>⭐️</span>
-                ))}{" "}
-                ({detailModalPlugin.ratingAmount}) | {detailModalPlugin.audits}{" "}
-                Verified Audits
+                {detailModalPlugin.creator} |{" "}
+                {detailModalPlugin.usage.toLocaleString()} installs |{" "}
+                {[...Array(detailModalPlugin.rating)].map(
+                  (rating: any, index: number) => (
+                    <span key={index}>⭐️</span>
+                  )
+                )}{" "}
+                {detailModalPlugin.ratingAmount != 0
+                  ? "(" + detailModalPlugin.ratingAmount + ") |"
+                  : null}{" "}
+                {detailModalPlugin.audits} Verified Audits
               </p>
             </div>
             <div className="flex flex-row pt-2">
@@ -501,27 +557,34 @@ export default function CreateWallet() {
               )}
               {activeDetailTab == "rating" &&
                 (detailModalPlugin.reviews?.length ? (
-                  detailModalPlugin.reviews.map((review: any) => (
-                    <div className="my-6 border border-zinc-200 py-2 px-4 rounded-2xl">
-                      <div className="flex flex-col">
-                        <div className="font-semibold">{review.reviewer}</div>
-                        <div className=" mb-2">
-                          {[...Array(review.rating)].map((rating: any) => (
-                            <span>⭐️</span>
-                          ))}
+                  detailModalPlugin.reviews.map(
+                    (review: any, index: number) => (
+                      <div
+                        className="my-6 border border-zinc-200 py-2 px-4 rounded-2xl"
+                        key={index}
+                      >
+                        <div className="flex flex-col">
+                          <div className="font-semibold">{review.reviewer}</div>
+                          <div className=" mb-2">
+                            {[...Array(review.rating)].map(
+                              (rating: any, index: number) => (
+                                <span key={index}>⭐️</span>
+                              )
+                            )}
+                          </div>
                         </div>
+                        <p className="text-lg">{review.text}</p>
                       </div>
-                      <p className="text-lg">{review.text}</p>
-                    </div>
-                  ))
+                    )
+                  )
                 ) : (
                   <p className="text-center text-lg text-zinc-300 font-bold mt-6">
                     No reviews yet
                   </p>
                 ))}
               {activeDetailTab == "code" &&
-                detailModalPlugin.code.map((code: any) => (
-                  <div className="">
+                detailModalPlugin.code.map((code: any, index: number) => (
+                  <div className="" key={index}>
                     <p className="text-lg mt-6 font-bold mb-4">{code.name}</p>
                     <div className="bg-black text-white rounded-2xl p-6 prose render-with-whitespace">
                       {code.content}
@@ -536,12 +599,57 @@ export default function CreateWallet() {
       {/* PLUGIN CONFIG MODAL */}
       {showConfigModal && (
         <GenericModal
-          title={"Finish configuring " + configModalPlugin.name}
+          title="Finish configuring plugin"
           closeModal={() => setShowConfigModal(false)}
         >
-          <div className="px-6 py-4">Text here</div>
+          <form
+            className="flex flex-col justify-center items-center mt-4 mb-8"
+            onSubmit={(e: any) => saveConfig(e, configModalPlugin)}
+          >
+            {configModalPlugin.requirements.map(
+              (config: any, index: number) => (
+                <div className="mx-auto w-1/2 flex flex-col" key={index}>
+                  {config.type == "string" && (
+                    <InputForm
+                      label={config.name}
+                      inputType="text"
+                      placeholder={config.placeholder}
+                      inputName={config.name.replace(/\s+/g, "-").toLowerCase()}
+                      defaultValue={
+                        categoryConfigs[configModalPlugin.id] &&
+                        categoryConfigs[configModalPlugin.id][config.id]
+                          ? categoryConfigs[configModalPlugin.id][config.id]
+                          : undefined
+                      }
+                      requiredStar
+                    />
+                  )}
+                </div>
+              )
+            )}
+            <Button
+              onClick={() => {}}
+              backgroundColor={"bg-blue-600"}
+              textColor={"text-zinc-100"}
+              additionalClasses="px-6 py-1 mt-4"
+              type="submit"
+            >
+              Save
+            </Button>
+          </form>
         </GenericModal>
       )}
+
+      {/* WALLET CREATED SUCCESS MODAL */}
+      {walletCreated && (
+        <GenericModal
+        title="Wallet created"
+        closeModal={() => setWalletCreated(false)}
+      >
+        
+      </GenericModal>
+      )}
+
     </Layout>
   );
 }

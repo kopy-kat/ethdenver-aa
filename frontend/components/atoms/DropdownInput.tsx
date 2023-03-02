@@ -2,10 +2,12 @@ export function DropdownInput({
     name,
     options,
     required,
+    defaultValue = undefined,
   }: {
     name: string;
     options: any[];
     required: boolean;
+    defaultValue?: string | undefined;
   }) {
     return (
       <select

@@ -93,7 +93,7 @@ export default function Profile() {
             >
               {wallets?.length ? (
                 wallets.map((wallet: any, index: number) => (
-                  <WalletCard wallet={wallet} emojis={emojis} index={index} />
+                  <WalletCard wallet={wallet} emojis={emojis} index={index} key={index} />
                 ))
               ) : (
                 <p className="text-center text-lg text-zinc-300 font-bold">

@@ -24,6 +24,12 @@ export default async function handler(
             pluginId: plugin.id
         }
     })
+    const requirements = await prisma.pluginConfigRequirement.findMany({
+        where: {
+            pluginId: plugin.id
+        }
+    })
+    plugin.requirements = requirements;
     plugin.code = [pluginCode];
     plugin.reviews = reviews;
   }

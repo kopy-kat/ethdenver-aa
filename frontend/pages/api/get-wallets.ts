@@ -16,22 +16,23 @@ export default async function handler(
       email: email as string,
     },
   });
-  const wallets:any = await prisma.smartWallet.findMany({
+  const wallets: any = await prisma.smartWallet.findMany({
+    include: {
+      chains: true,
+    },
     where: {
       userId: user?.id,
     },
   });
-  for (const wallet of wallets) {
-    const chains = await prisma.chain.findMany({
-      where: {
-        SmartWallet: {
-          some: {
-            id: wallet.id,
-          },
-        },
-      },
-    });
-    wallet.chains = chains;
-  }
+  // for (const wallet of wallets) {
+  //   const chains = await prisma.chain.findMany({
+  //     where: {
+  //       SmartWallet: {
+  //         id:wallet.id,
+  //       },
+  //     },
+  //   });
+  //   wallet.chains = chains;
+  // }
   res.status(200).json(wallets);
 }

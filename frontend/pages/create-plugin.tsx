@@ -163,7 +163,7 @@ export default function CreatePlugin() {
                       <InputForm
                         label="Icon URL"
                         inputType="text"
-                        placeholder="0.0.1"
+                        placeholder="An optional url of an icon to be displayed to the user."
                         inputName="icon"
                       />
                     </div>
