@@ -94,10 +94,7 @@ library LibDiamond {
         }        
     }
 
-    function enforceIsEntryPointOrOwner() internal view {
-
-        
-    }
+ 
    
 
     event DiamondCut(IDiamondCut.FacetCut[] _diamondCut, address _init, bytes _calldata);

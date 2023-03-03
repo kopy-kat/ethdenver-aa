@@ -8,17 +8,18 @@ async function deployDiamond () {
   const accounts = await ethers.getSigners()
   const contractOwner = accounts[0]
 
+  // Fixed entrypoint address, same for all networks
   const entryPointAddress = '0x0F46c65C17AA6b4102046935F33301f0510B163A'
 
-  // deploy DiamondCutFacet
-  const DiamondCutFacet = await ethers.getContractFactory('DiamondCutFacet')
-  const diamondCutFacet = await DiamondCutFacet.deploy()
-  await diamondCutFacet.deployed()
-  console.log('DiamondCutFacet deployed:', diamondCutFacet.address)
+  // deploy DiamondCutFacet, we're not doing this as we'll use the internal function.
+  // const DiamondCutFacet = await ethers.getContractFactory('DiamondCutFacet')
+  // const diamondCutFacet = await DiamondCutFacet.deploy()
+  // await diamondCutFacet.deployed()
+  // console.log('DiamondCutFacet deployed:', diamondCutFacet.address)
 
-  // deploy DiamondAccount
-  const DiamondAccount = await ethers.getContractFactory('DiamondAccount')
-  const diamondAccount = await DiamondAccount.deploy(entryPointAddress, contractOwner.address, diamondCutFacet.address)
+  // deploy Diamond
+  const Diamond = await ethers.getContractFactory('Diamond')
+  const diamond = await Diamond.deploy(entryPointAddress, diamondCutFacet.address)
   await diamondAccount.deployed()
   console.log('DiamondAccount deployed:', diamond.address)
 

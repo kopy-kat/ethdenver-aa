@@ -54,14 +54,40 @@ contract SimpleAccount is BaseAccount {
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-
+    
     /**
-     * execute a transaction (called directly from owner, or by entryPoint)
+     * execute a transaction (called by entryPoint)
      */
     function execute(address dest, uint256 value, bytes calldata func) external {
         LibDiamond.enforceIsEntryPoint();
-        
-        _call(dest, value, func);
+
+        // if the destination address is this contract (the diamond),
+        // then we use the diamond function selector
+        if ( address(this) == dest ){
+            LibDiamond.DiamondStorage storage ds;
+            bytes32 position = LibDiamond.DIAMOND_STORAGE_POSITION;
+            // get diamond storage
+            assembly {
+                ds.slot := position
+            }
+            // get facet from function selector
+            bytes4 functionSig = bytes4(func[0:4]);
+    
+            address facet = ds.selectorToFacetAndPosition[functionSig].facetAddress;
+            require(facet != address(0), "Diamond: Function does not exist");
+            (bool success, bytes memory data) = dest.delegatecall(func);
+            require (success, "Diamond: Function call failed");
+            return;
+            
+        }
+        else {
+            // Pre-execute functions
+
+            _call(dest, value, func);
+
+            // Post-execute functions
+
+        }
     }
 
     /**
@@ -102,6 +128,11 @@ contract SimpleAccount is BaseAccount {
     internal override virtual returns (uint256 validationData) {
 
         // TODO change this to a verification facet - NEVER VERIFIED
+        // address verificationFacet;
+        // verifationFacet.delegatecall(abicoder.encodeWithSignature("verify(address,bytes32,bytes)", userOp.signer, userOpHash, userOp.signature));
+
+
+
         return 1;
     }
 
@@ -114,24 +145,11 @@ contract SimpleAccount is BaseAccount {
         }
     }
 
-    /**
-     * check current account deposit in the entryPoint
-     */
-    function getDeposit() public view returns (uint256) {
+    function postRecieve() external payable {
+        // recieve functions
 
-        return LibDiamond.entryPoint().balanceOf(address(this));
+
     }
-
-    /**
-     * deposit more funds for this account in the entryPoint
-     */
-    function addDeposit() public payable {
-        LibDiamond.entryPoint().depositTo{value : msg.value}(address(this));
-    }
-
-   
-
-   
     
 }
 

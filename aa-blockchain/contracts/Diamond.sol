@@ -10,6 +10,7 @@ pragma solidity ^0.8.0;
 
 import { LibDiamond } from "./libraries/LibDiamond.sol";
 import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
+import {IEntryPoint} from "./interfaces/IEntryPoint.sol";
 import { IDiamondLoupe } from  "./interfaces/IDiamondLoupe.sol";
 import { IERC173 } from "./interfaces/IERC173.sol";
 import { IERC165} from "./interfaces/IERC165.sol";
@@ -28,18 +29,22 @@ struct DiamondArgs {
 
 contract Diamond {    
 
-    constructor(IDiamondCut.FacetCut[] memory _diamondCut, DiamondArgs memory _args) payable {
-        // We don't need to set a contrat owner, that's handled by the verify function and entryPoint
+    constructor(IDiamondCut.FacetCut[] memory _diamondCut, DiamondArgs memory _args, IEntryPoint entryPoint) payable {
+        // We don't need to set a contract owner, that's handled by the verify function and entryPoint
         // LibDiamond.setContractOwner(_args.owner);
+        // Diamond cut the AccountFacet, all will have this. 
         LibDiamond.diamondCut(_diamondCut, _args.init, _args.initCalldata);
 
-        // Code can be added here to perform actions and set state variables.
+        // Set the entry point
+        LibDiamond.setEntryPoint(entryPoint);
         
     }
 
     // Find facet for function that is called and execute the
     // function if a facet is found and return any value.
     fallback() external payable {
+        // make sure is being called by entry point
+        LibDiamond.enforceIsEntryPoint();
         LibDiamond.DiamondStorage storage ds;
         bytes32 position = LibDiamond.DIAMOND_STORAGE_POSITION;
         // get diamond storage
@@ -68,5 +73,7 @@ contract Diamond {
         }
     }
 
-    receive() external payable {}
+    receive() external payable {
+        // TODO delegate call into postRecieve
+    }
 }
