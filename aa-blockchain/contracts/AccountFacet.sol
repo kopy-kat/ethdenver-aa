@@ -26,7 +26,7 @@ error FunctionNotFound(bytes4 _functionSelector);
   *  has a single signer that can send requests through the entryPoint.
   *  is a Diamond account, so it can be upgraded.
   */
-contract SimpleAccount is BaseAccount {
+contract AccountFacet is BaseAccount {
     using ECDSA for bytes32;
 
     //filler member, to push the nonce and owner to the same slot
@@ -145,9 +145,9 @@ contract SimpleAccount is BaseAccount {
         }
     }
 
-    function postRecieve() external payable {
+    function postRecieve() external payable returns(uint) {
         // recieve functions
-
+        return(2);
 
     }
     

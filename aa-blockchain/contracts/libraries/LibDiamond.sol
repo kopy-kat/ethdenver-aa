@@ -242,4 +242,9 @@ library LibDiamond {
         }
         require(contractSize > 0, _errorMessage);
     }
+
+
+    function getSelector(string calldata _func) external pure returns (bytes4) {
+        return bytes4(keccak256(bytes(_func)));
+    }
 }
