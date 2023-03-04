@@ -77,14 +77,25 @@ model Plugin {
   pluginCategoryId        Int
   pluginCodeId            Int
   PluginConfigRequirement PluginConfigRequirement[]
+  ImplementedPlugin       ImplementedPlugin[]
+}
+
+model ImplementedPlugin {
+  id                 Int          @id @default(autoincrement())
+  Plugin             Plugin       @relation(fields: [pluginId], references: [id])
+  pluginId           Int
+  config             Json
+  SmartWallet        SmartWallet? @relation(fields: [smartWalletAddress], references: [address])
+  smartWalletAddress String?
 }
 
 model SmartWallet {
-  address  String  @id
+  address  String              @id
   deployed Boolean
   chains   Chain[]
-  User     User?   @relation(fields: [userId], references: [id])
+  User     User?               @relation(fields: [userId], references: [id])
   userId   String?
+  plugins  ImplementedPlugin[]
 }
 
 model Account {

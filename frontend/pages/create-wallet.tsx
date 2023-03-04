@@ -13,11 +13,15 @@ import {
 import { useState, useEffect } from "react";
 import { GenericModal } from "@/components/atoms/GenericModal";
 import useSWR from "swr";
-import { fetcher } from "@/utils/common";
+import { fetcher, formatAddress } from "@/utils/common";
 import { InputForm } from "@/components/molecules/InputForm";
 import { TextareaForm } from "@/components/molecules/TextareaForm";
 import { DropdownForm } from "@/components/molecules/DropdownForm";
 import { MultiselectForm } from "@/components/molecules/MultiselectForm";
+import { AnimatePresence, motion } from "framer-motion";
+import { MdOutlineContentCopy } from "react-icons/md";
+import { AiOutlineCheck } from "react-icons/ai";
+import { useSession } from "next-auth/react";
 
 interface PluginProps {
   index: number;
@@ -90,8 +94,8 @@ const PluginItem: React.FC<PluginProps> = ({
             <div className="w-10 h-10 rounded-full mr-2 p-1 bg-zinc-300" />
           )}
           <div className="flex flex-col">
-            <div className="text-lg font-semibold">{plugin.name}</div>
-            <p className="mb-1 -mt-1 font-semibold">
+            <div className="text-lg font-semibold lowercase">{plugin.name}</div>
+            <p className="mb-1 -mt-1 font-semibold lowercase">
               {plugin.creator} | {plugin.usage.toLocaleString()} installs |{" "}
               {[...Array(plugin.rating)].map((rating: any, index: number) => (
                 <span key={index}>⭐️</span>
@@ -99,9 +103,9 @@ const PluginItem: React.FC<PluginProps> = ({
               {plugin.ratingAmount != 0
                 ? "(" + plugin.ratingAmount + ") |"
                 : null}{" "}
-              {plugin.audits} Verified Audits
+              {plugin.audits} verified audits
             </p>
-            <div className={`${cardSubText} text-sm mb-1`}>
+            <div className={`${cardSubText} text-sm mb-1 lowercase`}>
               {plugin.oneLiner.length > 80
                 ? plugin.oneLiner.slice(0, 80) + "..."
                 : plugin.oneLiner}
@@ -166,8 +170,8 @@ const PluginItem: React.FC<PluginProps> = ({
               <div className="w-10 h-10 rounded-full mr-2 p-1 bg-zinc-300" />
             )}
             <div className="flex flex-col">
-              <div className="text-lg font-semibold">{plugin.name}</div>
-              <p className="mb-1 -mt-1 font-semibold">
+              <div className="text-lg font-semibold lowercase">{plugin.name}</div>
+              <p className="mb-1 -mt-1 font-semibold lowercase">
                 {plugin.creator} | {plugin.usage.toLocaleString()} installs |{" "}
                 {[...Array(plugin.rating)].map((rating: any, index: number) => (
                   <span key={index}>⭐️</span>
@@ -177,7 +181,7 @@ const PluginItem: React.FC<PluginProps> = ({
                   : null}{" "}
                 {plugin.audits} Verified Audits
               </p>
-              <div className={`${cardSubText} text-sm mb-1`}>
+              <div className={`${cardSubText} text-sm mb-1 lowercase`}>
                 {plugin.oneLiner.length > 80
                   ? plugin.oneLiner.slice(0, 80) + "..."
                   : plugin.oneLiner}
@@ -205,9 +209,13 @@ export default function CreateWallet() {
   const [categoryConfigs, setCategoryConfigs] = useState<any>({});
   const [creatingWallet, setCreatingWallet] = useState<boolean>(false);
   const [walletCreated, setWalletCreated] = useState<boolean>(false);
+  const [createdWalletAddress, setCreatedWalletAddress] = useState<string>("");
+  const [createdWalletCopied, setCreatedWalletCopied] =
+    useState<boolean>(false);
 
   const { data: categories } = useSWR("/api/get-plugin-categories", fetcher);
   const { data: plugins } = useSWR("/api/get-plugins", fetcher);
+  const { data: session } = useSession();
 
   // MODALS
   const [showDetailModal, setShowDetailModal] = useState<boolean>(false);
@@ -216,6 +224,8 @@ export default function CreateWallet() {
 
   const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
   const [configModalPlugin, setConfigModalPlugin] = useState<any>({});
+  const [configMissing, setConfigMissing] = useState<boolean>(false);
+  const [pluginsMissing, setPluginsMissing] = useState<boolean>(false);
 
   function openDetailModal(plugin: any) {
     setDetailModalPlugin(plugin);
@@ -285,30 +295,103 @@ export default function CreateWallet() {
     setShowConfigModal(false);
   }
 
-  function createWallet() {
+  async function createContractAddress() {
+    return "0xF7C012789aac54B5E33EA5b88064ca1F1172De05";
+  }
+
+  function createImplementedPluginArray(smartWalletAddress: string) {
+    const implementedPlugins: any = [];
+    for (let i = 0; i < selectedPlugins.length; i++) {
+      const config = categoryConfigs[selectedPlugins[i].id];
+      const implementedPlugin = {
+        pluginId: parseInt(selectedPlugins[i].id),
+        config: config,
+        smartWalletAddress: smartWalletAddress,
+      };
+      implementedPlugins.push(implementedPlugin);
+    }
+    return implementedPlugins;
+  }
+
+  function resetErrors() {
+    setConfigMissing(false);
+    setPluginsMissing(false);
+  }
+
+  async function createWallet() {
+    if (!session) return;
+    if (!session.user) return;
+    resetErrors();
+    if (selectedPlugins.length === 0) {
+      setPluginsMissing(true);
+      return;
+    }
+    const requiredConfigNumber = selectedPlugins.reduce(
+      (acc: number, plugin: any) => acc + plugin.requirements.length,
+      0
+    );
+    const configNumber = Object.keys(categoryConfigs).reduce(
+      (acc: number, key: string) =>
+        acc + Object.keys(categoryConfigs[key]).length,
+      0
+    );
+    if (requiredConfigNumber !== configNumber) {
+      setConfigMissing(true);
+      return;
+    }
     setCreatingWallet(true);
+    const contractAddress = await createContractAddress();
+    setCreatedWalletAddress(contractAddress);
+    const implementedPlugins = createImplementedPluginArray(contractAddress);
+    await fetch("/api/create-wallet", {
+      method: "POST",
+      body: JSON.stringify({
+        address: contractAddress,
+        userEmail: session.user.email,
+        plugins: implementedPlugins,
+      }),
+    });
     setWalletCreated(true);
+    setCreatingWallet(false);
+  }
+
+  function copyAddress() {
+    navigator.clipboard.writeText(createdWalletAddress);
+    setCreatedWalletCopied(true);
+    setTimeout(() => setCreatedWalletCopied(false), 5000);
   }
 
   return (
     <Layout
       outsideOfBoxChildren={
-        <Button
-          onClick={createWallet}
-          backgroundColor={"bg-blue-600"}
-          textColor={"text-zinc-100"}
-          additionalClasses="px-6 py-1 mt-8 mx-auto w-1/4"
-          loading={creatingWallet}
-        >
-          Create wallet
-        </Button>
+        <>
+          <Button
+            onClick={createWallet}
+            backgroundColor={"bg-blue-600"}
+            textColor={"text-zinc-100"}
+            additionalClasses="px-6 py-1 mt-8 mx-auto w-1/4"
+            loading={creatingWallet}
+          >
+            create wallet
+          </Button>
+          {configMissing && (
+            <p className="text-red-600 text-center font-semibold text-sm mt-2">
+              finish configuring plugins
+            </p>
+          )}
+          {pluginsMissing && (
+            <p className="text-red-600 text-center font-semibold text-sm mt-2">
+              no plugins selected
+            </p>
+          )}
+        </>
       }
     >
       <div className="flex flex-row">
         <DragDropContext onDragEnd={onDragEndHandler}>
           <section className="w-1/2 px-6 py-8 border-r border-zinc-200">
             <div className="flex flex-col justify-start">
-              <h4 className="text-2xl font-semibold">Plugins</h4>
+              <h4 className="text-2xl font-semibold">plugins</h4>
               {loadingComplete ? (
                 <Droppable droppableId="Plugins">
                   {(droppableProvided, droppableSnapshot) => (
@@ -320,7 +403,7 @@ export default function CreateWallet() {
                       {categories !== undefined
                         ? categories.map((pluginCategory: any) => (
                             <>
-                              <h4 className="font-semibold text-base mb-2 mt-2 ml-1">
+                              <h4 className="font-semibold text-base mb-2 mt-2 ml-1 lowercase">
                                 {pluginCategory.name}
                               </h4>
                               {availablePlugins.some(
@@ -345,7 +428,7 @@ export default function CreateWallet() {
                                 )
                               ) : (
                                 <div className="flex flex-row justify-between items-center border border-dashed border-zinc-300 rounded-2xl px-4 py-5 my-2 font-semibold text-zinc-500">
-                                  No more {pluginCategory.name.toLowerCase()}{" "}
+                                  no more {pluginCategory.name.toLowerCase()}{" "}
                                   plugins
                                 </div>
                               )}
@@ -395,7 +478,7 @@ export default function CreateWallet() {
           </section>
           <section className="w-1/2 px-6 py-8">
             <div className="flex flex-col">
-              <h4 className="text-2xl font-semibold">Your Wallet</h4>
+              <h4 className="text-2xl font-semibold">wallet</h4>
               {loadingComplete ? (
                 <Droppable droppableId="Selected">
                   {(droppableProvided, droppableSnapshot) => (
@@ -407,7 +490,7 @@ export default function CreateWallet() {
                       {categories != undefined
                         ? categories?.map((pluginCategory: any) => (
                             <>
-                              <h4 className="font-semibold text-base mb-2 mt-2 ml-1">
+                              <h4 className="font-semibold text-base mb-2 mt-2 ml-1 lowercase">
                                 {pluginCategory.name}
                               </h4>
                               {selectedPlugins.some(
@@ -438,7 +521,7 @@ export default function CreateWallet() {
                                 )
                               ) : (
                                 <div className="flex flex-row justify-between items-center border border-dashed border-zinc-300 rounded-2xl px-4 py-5 my-2 font-semibold text-zinc-500">
-                                  No {pluginCategory.name.toLowerCase()} plugin
+                                  no {pluginCategory.name.toLowerCase()} plugin
                                   yet
                                 </div>
                               )}
@@ -492,13 +575,13 @@ export default function CreateWallet() {
       {/* PLUGIN DETAIL MODAL */}
       {showDetailModal && (
         <GenericModal
-          title={"Detail"}
+          title={"detail"}
           closeModal={() => setShowDetailModal(false)}
         >
           <div className="px-12 pb-8 max-w-[50vw] max-h-[82vh] overflow-auto scrollbar-hide">
             <div className="mb-4">
-              <h3 className="font-bold text-4xl">{detailModalPlugin.name}</h3>
-              <p className="mt-2 text-lg font-semibold">
+              <h3 className="font-bold text-4xl lowercase">{detailModalPlugin.name}</h3>
+              <p className="mt-2 text-lg font-semibold lowercase">
                 {detailModalPlugin.creator} |{" "}
                 {detailModalPlugin.usage.toLocaleString()} installs |{" "}
                 {[...Array(detailModalPlugin.rating)].map(
@@ -509,7 +592,7 @@ export default function CreateWallet() {
                 {detailModalPlugin.ratingAmount != 0
                   ? "(" + detailModalPlugin.ratingAmount + ") |"
                   : null}{" "}
-                {detailModalPlugin.audits} Verified Audits
+                {detailModalPlugin.audits} verified audits
               </p>
             </div>
             <div className="flex flex-row pt-2">
@@ -522,7 +605,7 @@ export default function CreateWallet() {
                 }
                 onClick={() => setActiveDetailTab("description")}
               >
-                Description
+                description
               </div>
               <div
                 className={
@@ -533,7 +616,7 @@ export default function CreateWallet() {
                 }
                 onClick={() => setActiveDetailTab("rating")}
               >
-                Rating & Review
+                rating & review
               </div>
               <div
                 className={
@@ -544,7 +627,7 @@ export default function CreateWallet() {
                 }
                 onClick={() => setActiveDetailTab("code")}
               >
-                Code
+                code
               </div>
             </div>
             <div className="">
@@ -553,7 +636,7 @@ export default function CreateWallet() {
                   <p className="text-lg my-6">{desc}</p>
                 ))} */}
               {activeDetailTab == "description" && (
-                <p className="text-lg my-6">{detailModalPlugin.description}</p>
+                <p className="text-lg my-6 lowercase">{detailModalPlugin.description}</p>
               )}
               {activeDetailTab == "rating" &&
                 (detailModalPlugin.reviews?.length ? (
@@ -564,8 +647,8 @@ export default function CreateWallet() {
                         key={index}
                       >
                         <div className="flex flex-col">
-                          <div className="font-semibold">{review.reviewer}</div>
-                          <div className=" mb-2">
+                          <div className="font-semibold lowercase">{review.reviewer}</div>
+                          <div className="mb-2 lowercase">
                             {[...Array(review.rating)].map(
                               (rating: any, index: number) => (
                                 <span key={index}>⭐️</span>
@@ -573,13 +656,13 @@ export default function CreateWallet() {
                             )}
                           </div>
                         </div>
-                        <p className="text-lg">{review.text}</p>
+                        <p className="text-lg lowercase">{review.text}</p>
                       </div>
                     )
                   )
                 ) : (
                   <p className="text-center text-lg text-zinc-300 font-bold mt-6">
-                    No reviews yet
+                    no reviews yet
                   </p>
                 ))}
               {activeDetailTab == "code" &&
@@ -599,7 +682,7 @@ export default function CreateWallet() {
       {/* PLUGIN CONFIG MODAL */}
       {showConfigModal && (
         <GenericModal
-          title="Finish configuring plugin"
+          title="finish configuring plugin"
           closeModal={() => setShowConfigModal(false)}
         >
           <form
@@ -611,7 +694,7 @@ export default function CreateWallet() {
                 <div className="mx-auto w-1/2 flex flex-col" key={index}>
                   {config.type == "string" && (
                     <InputForm
-                      label={config.name}
+                      label={config.name.toLowerCase()}
                       inputType="text"
                       placeholder={config.placeholder}
                       inputName={config.name.replace(/\s+/g, "-").toLowerCase()}
@@ -634,7 +717,7 @@ export default function CreateWallet() {
               additionalClasses="px-6 py-1 mt-4"
               type="submit"
             >
-              Save
+              save
             </Button>
           </form>
         </GenericModal>
@@ -642,14 +725,59 @@ export default function CreateWallet() {
 
       {/* WALLET CREATED SUCCESS MODAL */}
       {walletCreated && (
-        <GenericModal
-        title="Wallet created"
-        closeModal={() => setWalletCreated(false)}
-      >
-        
-      </GenericModal>
+        <GenericModal title="" closeModal={() => setWalletCreated(false)}>
+          <div className="px-12 pt-2 pb-4 max-w-[30vw]">
+            <div className="text-black p-6">
+              <AnimatePresence initial={true}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={5}
+                  stroke="currentColor"
+                  className="w-16 h-16 mx-auto"
+                >
+                  <motion.path
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    exit={{ pathLength: 0 }}
+                    transition={{
+                      type: "tween",
+                      duration: 0.3,
+                      ease: "easeOut",
+                    }}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4.5 12.75l6 6 9-13.5"
+                  />
+                </svg>
+              </AnimatePresence>
+              <div className="text-center text-3xl font-semibold mt-4">
+                wallet created
+              </div>
+              <h4 className="text-lg text-center text-gray-600 mt-6">
+                your wallet has been created but not deployed yet. you can
+                already receive funds at:
+              </h4>
+              <div
+                className="bg-orange-100 px-4 py-2 rounded-2xl mt-2 w-full flex flex-row justify-center font-semibold"
+                onClick={copyAddress}
+              >
+                {formatAddress(createdWalletAddress)}
+                {createdWalletCopied ? (
+                  <AiOutlineCheck className="ml-2 my-auto" size={15} />
+                ) : (
+                  <MdOutlineContentCopy className="ml-2 my-auto" size={15} />
+                )}
+              </div>
+              <h4 className="text-lg text-center text-gray-600 mt-2">
+                head to the profile page to deploy your wallet and start sending
+                transactions.
+              </h4>
+            </div>
+          </div>
+        </GenericModal>
       )}
-
     </Layout>
   );
 }

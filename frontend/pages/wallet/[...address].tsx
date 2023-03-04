@@ -18,6 +18,7 @@ import { InputForm } from "@/components/molecules/InputForm";
 import { TextareaForm } from "@/components/molecules/TextareaForm";
 import { DropdownForm } from "@/components/molecules/DropdownForm";
 import { MultiselectForm } from "@/components/molecules/MultiselectForm";
+import { useRouter } from "next/router";
 
 interface PluginProps {
   index: number;
@@ -90,8 +91,8 @@ const PluginItem: React.FC<PluginProps> = ({
             <div className="w-10 h-10 rounded-full mr-2 p-1 bg-zinc-300" />
           )}
           <div className="flex flex-col">
-            <div className="text-lg font-semibold">{plugin.name}</div>
-            <p className="mb-1 -mt-1 font-semibold">
+            <div className="text-lg font-semibold lowercase">{plugin.name}</div>
+            <p className="mb-1 -mt-1 font-semibold lowercase">
               {plugin.creator} | {plugin.usage.toLocaleString()} installs |{" "}
               {[...Array(plugin.rating)].map((rating: any, index: number) => (
                 <span key={index}>⭐️</span>
@@ -101,7 +102,7 @@ const PluginItem: React.FC<PluginProps> = ({
                 : null}{" "}
               {plugin.audits} Verified Audits
             </p>
-            <div className={`${cardSubText} text-sm mb-1`}>
+            <div className={`${cardSubText} text-sm mb-1 lowercase`}>
               {plugin.oneLiner.length > 80
                 ? plugin.oneLiner.slice(0, 80) + "..."
                 : plugin.oneLiner}
@@ -166,8 +167,8 @@ const PluginItem: React.FC<PluginProps> = ({
               <div className="w-10 h-10 rounded-full mr-2 p-1 bg-zinc-300" />
             )}
             <div className="flex flex-col">
-              <div className="text-lg font-semibold">{plugin.name}</div>
-              <p className="mb-1 -mt-1 font-semibold">
+              <div className="text-lg font-semibold lowercase">{plugin.name}</div>
+              <p className="mb-1 -mt-1 font-semibold lowercase">
                 {plugin.creator} | {plugin.usage.toLocaleString()} installs |{" "}
                 {[...Array(plugin.rating)].map((rating: any, index: number) => (
                   <span key={index}>⭐️</span>
@@ -177,7 +178,7 @@ const PluginItem: React.FC<PluginProps> = ({
                   : null}{" "}
                 {plugin.audits} Verified Audits
               </p>
-              <div className={`${cardSubText} text-sm mb-1`}>
+              <div className={`${cardSubText} text-sm mb-1 lowercase`}>
                 {plugin.oneLiner.length > 80
                   ? plugin.oneLiner.slice(0, 80) + "..."
                   : plugin.oneLiner}
@@ -207,7 +208,40 @@ export default function CreateWallet() {
   const [walletCreated, setWalletCreated] = useState<boolean>(false);
 
   const { data: categories } = useSWR("/api/get-plugin-categories", fetcher);
-  const { data: plugins } = useSWR("/api/get-plugins", fetcher);
+  // const { data: plugins } = useSWR("/api/get-plugins", fetcher);
+  const router = useRouter();
+
+  async function getWallet(address: string) {
+    const wallet = await fetch("/api/get-wallet?address=" + address)
+      .then((res) => res.json())
+      .catch((err) => console.log(err));
+    const plugins = await fetch("/api/get-plugins")
+      .then((res) => res.json())
+      .catch((err) => console.log(err));
+    if (wallet) {
+      const availablePluginsTemp = plugins.filter(
+        (plugin: any) => !wallet.plugins.find((e: any) => e.id == plugin.id)
+      );
+      const selectedPluginsTemp = plugins.filter((plugin: any) =>
+        wallet.plugins.find((e: any) => e.id == plugin.id)
+      );
+      setSelectedPlugins(selectedPluginsTemp);
+      setAvailablePlugins(availablePluginsTemp);
+      const pluginConfigs: any = {};
+      wallet.plugins.forEach((el: any) => {
+        pluginConfigs[el.id] = el.config;
+      });
+      setCategoryConfigs(pluginConfigs);
+      setLoadingComplete(true);
+    }
+  }
+
+  useEffect(() => {
+    console.log(router.query);
+    if (router.query && router.query.address) {
+      getWallet(router.query.address as string);
+    }
+  }, [router]);
 
   // MODALS
   const [showDetailModal, setShowDetailModal] = useState<boolean>(false);
@@ -228,13 +262,6 @@ export default function CreateWallet() {
     setShowConfigModal(true);
   }
 
-  useEffect(() => {
-    if (plugins) {
-      setAvailablePlugins(plugins);
-      setLoadingComplete(true);
-    }
-  }, [plugins]);
-
   function removeSelectedPlugin(id: number, e: any) {
     e.stopPropagation();
     let index = selectedPlugins.findIndex((plugin) => plugin.id === id);
@@ -248,7 +275,6 @@ export default function CreateWallet() {
 
   const onDragEndHandler = (result: DropResult) => {
     const { destination, source } = result;
-    console.log(destination, source);
 
     if (
       !destination ||
@@ -297,10 +323,10 @@ export default function CreateWallet() {
           onClick={createWallet}
           backgroundColor={"bg-blue-600"}
           textColor={"text-zinc-100"}
-          additionalClasses="px-6 py-1 mt-8 mx-auto w-1/4"
+          additionalClasses="px-6 py-1 mt-8 mx-auto w-1/4 lowercase"
           loading={creatingWallet}
         >
-          Create wallet
+          Update wallet
         </Button>
       }
     >
@@ -308,7 +334,7 @@ export default function CreateWallet() {
         <DragDropContext onDragEnd={onDragEndHandler}>
           <section className="w-1/2 px-6 py-8 border-r border-zinc-200">
             <div className="flex flex-col justify-start">
-              <h4 className="text-2xl font-semibold">Plugins</h4>
+              <h4 className="text-2xl font-semibold lowercase">Plugins</h4>
               {loadingComplete ? (
                 <Droppable droppableId="Plugins">
                   {(droppableProvided, droppableSnapshot) => (
@@ -320,7 +346,7 @@ export default function CreateWallet() {
                       {categories !== undefined
                         ? categories.map((pluginCategory: any) => (
                             <>
-                              <h4 className="font-semibold text-base mb-2 mt-2 ml-1">
+                              <h4 className="font-semibold text-base mb-2 mt-2 ml-1 lowercase">
                                 {pluginCategory.name}
                               </h4>
                               {availablePlugins.some(
@@ -344,7 +370,7 @@ export default function CreateWallet() {
                                     )
                                 )
                               ) : (
-                                <div className="flex flex-row justify-between items-center border border-dashed border-zinc-300 rounded-2xl px-4 py-5 my-2 font-semibold text-zinc-500">
+                                <div className="flex flex-row justify-between items-center border border-dashed border-zinc-300 rounded-2xl px-4 py-5 my-2 font-semibold text-zinc-500 lowercase">
                                   No more {pluginCategory.name.toLowerCase()}{" "}
                                   plugins
                                 </div>
@@ -395,7 +421,7 @@ export default function CreateWallet() {
           </section>
           <section className="w-1/2 px-6 py-8">
             <div className="flex flex-col">
-              <h4 className="text-2xl font-semibold">Your Wallet</h4>
+              <h4 className="text-2xl font-semibold lowercase">Your Wallet</h4>
               {loadingComplete ? (
                 <Droppable droppableId="Selected">
                   {(droppableProvided, droppableSnapshot) => (
@@ -407,7 +433,7 @@ export default function CreateWallet() {
                       {categories != undefined
                         ? categories?.map((pluginCategory: any) => (
                             <>
-                              <h4 className="font-semibold text-base mb-2 mt-2 ml-1">
+                              <h4 className="font-semibold text-base mb-2 mt-2 ml-1 lowercase">
                                 {pluginCategory.name}
                               </h4>
                               {selectedPlugins.some(
@@ -437,7 +463,7 @@ export default function CreateWallet() {
                                     )
                                 )
                               ) : (
-                                <div className="flex flex-row justify-between items-center border border-dashed border-zinc-300 rounded-2xl px-4 py-5 my-2 font-semibold text-zinc-500">
+                                <div className="flex flex-row justify-between items-center border border-dashed border-zinc-300 rounded-2xl px-4 py-5 my-2 font-semibold text-zinc-500 lowercase">
                                   No {pluginCategory.name.toLowerCase()} plugin
                                   yet
                                 </div>
@@ -492,13 +518,13 @@ export default function CreateWallet() {
       {/* PLUGIN DETAIL MODAL */}
       {showDetailModal && (
         <GenericModal
-          title={"Detail"}
+          title={"detail"}
           closeModal={() => setShowDetailModal(false)}
         >
           <div className="px-12 pb-8 max-w-[50vw] max-h-[82vh] overflow-auto scrollbar-hide">
             <div className="mb-4">
-              <h3 className="font-bold text-4xl">{detailModalPlugin.name}</h3>
-              <p className="mt-2 text-lg font-semibold">
+              <h3 className="font-bold text-4xl lowercase">{detailModalPlugin.name}</h3>
+              <p className="mt-2 text-lg font-semibold lowercase">
                 {detailModalPlugin.creator} |{" "}
                 {detailModalPlugin.usage.toLocaleString()} installs |{" "}
                 {[...Array(detailModalPlugin.rating)].map(
@@ -515,7 +541,7 @@ export default function CreateWallet() {
             <div className="flex flex-row pt-2">
               <div
                 className={
-                  "rounded-2xl px-4 py-1 mr-2 hover:cursor-pointer font-semibold text-sm" +
+                  "rounded-2xl px-4 py-1 mr-2 hover:cursor-pointer font-semibold text-sm lowercase" +
                   (activeDetailTab == "description"
                     ? " bg-zinc-800 text-zinc-200"
                     : " bg-zinc-200 text-zinc-800")
@@ -526,7 +552,7 @@ export default function CreateWallet() {
               </div>
               <div
                 className={
-                  "rounded-2xl px-4 py-1 mr-2 hover:cursor-pointer font-semibold text-sm" +
+                  "rounded-2xl px-4 py-1 mr-2 hover:cursor-pointer font-semibold text-sm lowercase" +
                   (activeDetailTab == "rating"
                     ? " bg-zinc-800 text-zinc-200"
                     : " bg-zinc-200 text-zinc-800")
@@ -537,7 +563,7 @@ export default function CreateWallet() {
               </div>
               <div
                 className={
-                  "rounded-2xl px-4 py-1 hover:cursor-pointer font-semibold text-sm" +
+                  "rounded-2xl px-4 py-1 hover:cursor-pointer font-semibold text-sm lowercase" +
                   (activeDetailTab == "code"
                     ? " bg-zinc-800 text-zinc-200"
                     : " bg-zinc-200 text-zinc-800")
@@ -553,7 +579,7 @@ export default function CreateWallet() {
                   <p className="text-lg my-6">{desc}</p>
                 ))} */}
               {activeDetailTab == "description" && (
-                <p className="text-lg my-6">{detailModalPlugin.description}</p>
+                <p className="text-lg my-6 lowercase">{detailModalPlugin.description}</p>
               )}
               {activeDetailTab == "rating" &&
                 (detailModalPlugin.reviews?.length ? (
@@ -564,8 +590,8 @@ export default function CreateWallet() {
                         key={index}
                       >
                         <div className="flex flex-col">
-                          <div className="font-semibold">{review.reviewer}</div>
-                          <div className=" mb-2">
+                          <div className="font-semibold lowercase">{review.reviewer}</div>
+                          <div className="mb-2 lowercase">
                             {[...Array(review.rating)].map(
                               (rating: any, index: number) => (
                                 <span key={index}>⭐️</span>
@@ -573,12 +599,12 @@ export default function CreateWallet() {
                             )}
                           </div>
                         </div>
-                        <p className="text-lg">{review.text}</p>
+                        <p className="text-lg lowercase">{review.text}</p>
                       </div>
                     )
                   )
                 ) : (
-                  <p className="text-center text-lg text-zinc-300 font-bold mt-6">
+                  <p className="text-center text-lg text-zinc-300 font-bold mt-6 lowercase">
                     No reviews yet
                   </p>
                 ))}
@@ -599,7 +625,7 @@ export default function CreateWallet() {
       {/* PLUGIN CONFIG MODAL */}
       {showConfigModal && (
         <GenericModal
-          title="Finish configuring plugin"
+          title="finish configuring plugin"
           closeModal={() => setShowConfigModal(false)}
         >
           <form
@@ -611,7 +637,7 @@ export default function CreateWallet() {
                 <div className="mx-auto w-1/2 flex flex-col" key={index}>
                   {config.type == "string" && (
                     <InputForm
-                      label={config.name}
+                      label={config.name.toLowerCase()}
                       inputType="text"
                       placeholder={config.placeholder}
                       inputName={config.name.replace(/\s+/g, "-").toLowerCase()}
@@ -631,7 +657,7 @@ export default function CreateWallet() {
               onClick={() => {}}
               backgroundColor={"bg-blue-600"}
               textColor={"text-zinc-100"}
-              additionalClasses="px-6 py-1 mt-4"
+              additionalClasses="px-6 py-1 mt-4 lowercase"
               type="submit"
             >
               Save
@@ -639,17 +665,6 @@ export default function CreateWallet() {
           </form>
         </GenericModal>
       )}
-
-      {/* WALLET CREATED SUCCESS MODAL */}
-      {walletCreated && (
-        <GenericModal
-        title="Wallet created"
-        closeModal={() => setWalletCreated(false)}
-      >
-        
-      </GenericModal>
-      )}
-
     </Layout>
   );
 }

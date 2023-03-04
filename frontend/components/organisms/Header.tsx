@@ -15,15 +15,15 @@ export function Header() {
         <div className="flex justify-between items-center">
           <div className="flex-1 flex justify-start items-center">
             <Link href="/" className="font-bold text-2xl">
-              AA
+              diamond wallet
             </Link>
           </div>
           <div className="flex items-center">
             <Link href="/create-wallet" className="text-lg font-semibold mx-4">
-              Create wallet
+              create wallet
             </Link>
             <Link href="/create-plugin" className="text-lg font-semibold mx-4">
-              Create plugin
+              create plugin
             </Link>
           </div>
 

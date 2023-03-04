@@ -24,15 +24,5 @@ export default async function handler(
       userId: user?.id,
     },
   });
-  // for (const wallet of wallets) {
-  //   const chains = await prisma.chain.findMany({
-  //     where: {
-  //       SmartWallet: {
-  //         id:wallet.id,
-  //       },
-  //     },
-  //   });
-  //   wallet.chains = chains;
-  // }
   res.status(200).json(wallets);
 }
