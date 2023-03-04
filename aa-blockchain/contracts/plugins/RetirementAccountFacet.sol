@@ -27,7 +27,6 @@ contract RetirementSavings {
     
     function saveForRetirement() external payable {
         // don't think this is needed anyway 
-        LibDiamond.enforceIsEntryPoint();
         DiamondStorage storage ds = getStorage();
         require(msg.value > 0, "Amount must be greater than 0");
         require(ds.retirementAddress != address(0), "Retirement address must be set.");
