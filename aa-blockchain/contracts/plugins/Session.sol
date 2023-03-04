@@ -30,16 +30,15 @@ contract Session {
 	ds.maxMaxPriorityFeePerGas = _maxMaxPriorityFeePerGas;
     }
 
-    function preValidate(UserOperation calldata userOperation) public returns (bool) {
+    function validate(UserOperation calldata userOperation) public returns (bool) {
       DiamondStorage storage ds = getStorage();
       if (ds.expiryTimestamp < block.timestamp) {
         // no active sessions. accept
         return true;
       }
 
-      // TODO: check allowedFunctionSignature
-
-      return userOperation.callGasLimit <= ds.maxCallGasLimit &&
+      return bytes4(userOperation.callData[0:4]) == ds.allowedFunctionSignature &&
+             userOperation.callGasLimit <= ds.maxCallGasLimit &&
              userOperation.maxFeePerGas <= ds.maxMaxFeePerGas &&
              userOperation.maxPriorityFeePerGas <= ds.maxMaxPriorityFeePerGas;
     }
