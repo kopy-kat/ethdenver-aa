@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 
 
-contract RetirementSavings {
+contract RetirementSavingsFacet {
 
     struct DiamondStorage {
         uint256 percentage;

@@ -7,36 +7,52 @@ const { getSelectors, FacetCutAction } = require('./libraries/diamond.js')
 async function deployDiamond () {
   const accounts = await ethers.getSigners()
   const contractOwner = accounts[0]
+  const retirementAddress = accounts[0].address
+  const retirementPercent = 5
 
   // Fixed entrypoint address, same for all networks
-  const entryPointAddress = '0x0F46c65C17AA6b4102046935F33301f0510B163A'
+  // but for testing purposes we use our own address
+  const entryPointAddress = contractOwner.address
 
-  // deploy DiamondCutFacet, we're not doing this as we'll use the internal function.
-  // const DiamondCutFacet = await ethers.getContractFactory('DiamondCutFacet')
-  // const diamondCutFacet = await DiamondCutFacet.deploy()
-  // await diamondCutFacet.deployed()
-  // console.log('DiamondCutFacet deployed:', diamondCutFacet.address)
+  // deploy DiamondLibrary
+  const LibDiamond = await ethers.getContractFactory('LibDiamond')
+  const libDiamond = await LibDiamond.deploy()
+  await libDiamond.deployed()
+  console.log('LibDiamond deployed:', libDiamond.address)
 
-  // deploy Diamond
-  const Diamond = await ethers.getContractFactory('Diamond')
-  const diamond = await Diamond.deploy(entryPointAddress, diamondCutFacet.address)
-  await diamondAccount.deployed()
+  // deploy DiamondCutFacet
+  const DiamondCutFacet = await ethers.getContractFactory('DiamondCutFacet')
+  const diamondCutFacet = await DiamondCutFacet.deploy()
+  await diamondCutFacet.deployed()
+  console.log('DiamondCutFacet deployed:', diamondCutFacet.address)
+
+  // deploy AccountFacet
+  const AccountFacet = await ethers.getContractFactory('AccountFacet', {
+    libraries: {
+      LibDiamond: libDiamond.address
+      } 
+    })
+  const accountFacet = await AccountFacet.deploy()
+  await accountFacet.deployed()
+  console.log('AccountFacet deployed:', accountFacet.address)
+
+  // deploy Diamond and link DiamondLibrary
+  const Diamond = await ethers.getContractFactory('Diamond', {
+    libraries: {
+      LibDiamond: libDiamond.address
+    }
+  })
+  const diamond = await Diamond.deploy(diamondCutFacet.address, accountFacet.address, entryPointAddress)
+  await diamond.deployed()
   console.log('DiamondAccount deployed:', diamond.address)
-
-  // deploy DiamondInit
-  // DiamondInit provides a function that is called when the diamond is upgraded to initialize state variables
-  // Read about how the diamondCut function works here: https://eips.ethereum.org/EIPS/eip-2535#addingreplacingremoving-functions
-  const DiamondInit = await ethers.getContractFactory('DiamondInit')
-  const diamondInit = await DiamondInit.deploy()
-  await diamondInit.deployed()
-  console.log('DiamondInit deployed:', diamondInit.address)
 
   // deploy facets
   console.log('')
   console.log('Deploying facets')
   const FacetNames = [
     'DiamondLoupeFacet',
-    'OwnershipFacet'
+    'RetirementSavingsFacet',
+
   ]
 
   const cut = []
@@ -55,20 +71,33 @@ async function deployDiamond () {
   // upgrade diamond with facets
   console.log('')
   console.log('Diamond Cut:', cut)
-  const diamondCut = await ethers.getContractAt('IDiamondCut', diamondAccount.address)
+  const diamondCut = await ethers.getContractAt('IDiamondCut', diamond.address)
   let tx
   let receipt
-  // call to init function
-  let functionCall = diamondInit.interface.encodeFunctionData('init')
-  tx = await diamondCut.diamondCut(cut, diamondInit.address, functionCall)
+
+  // We're not using an init function
+  tx = await diamondCut.diamondCut(cut, ethers.constants.AddressZero, '0x')
   console.log('Diamond cut tx: ', tx.hash)
   receipt = await tx.wait()
   if (!receipt.status) {
     throw Error(`Diamond upgrade failed: ${tx.hash}`)
   }
   console.log('Completed diamond cut')
+
+   // change the retirement savings address
+  const retirementSavingsFacet = await ethers.getContractAt('RetirementSavingsFacet', diamond.address)
+  tx = await retirementSavingsFacet.setRetirementValues(retirementPercent, retirementAddress)
+  console.log("Completed setting retirement address and percent: ", tx.hash)
+  recipet = await tx.wait()
+  if (!receipt.status) {
+    throw Error(`Retirement settings update failed: ${tx.hash}`)
+  }
+  
   return diamond.address
+
+ 
 }
+
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
