@@ -9,7 +9,6 @@ contract RetirementSavings {
         uint256 savedAmount;
         address retirementAccount;
         
-
     }
 
     function getStorage() DiamondStorage internal pure returns (DiamondStorage storage ds) {
@@ -26,7 +25,7 @@ contract RetirementSavings {
         ds.retirementAddress = retirementAddress;
     }
     
-    function save() external payable {
+    function saveForRetirement() external payable {
         // don't think this is needed anyway 
         LibDiamond.enforceIsEntryPoint();
         DiamondStorage storage ds = getStorage();
@@ -35,6 +34,7 @@ contract RetirementSavings {
         uint256 saveAmount = msg.value * percentage / 100;
         ds.retirementAddress.transfer(saveAmount);
         ds.savedAmount += saveAmount;
+
     }
     
     

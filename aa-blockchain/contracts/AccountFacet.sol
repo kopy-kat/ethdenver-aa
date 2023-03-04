@@ -147,7 +147,19 @@ contract AccountFacet is BaseAccount {
 
     function postRecieve() external payable returns(uint) {
         // recieve functions
-        return(2);
+        // call the saveForRetirment facet
+        LibDiamond.DiamondStorage storage ds;
+        bytes32 position = LibDiamond.DIAMOND_STORAGE_POSITION;
+        // get diamond storage
+        assembly {
+            ds.slot := position
+        }
+        // get facet from function selector
+        bytes4 functionSelector = LibDiamond.getSelector("saveForRetirement()");
+        address facet = ds.selectorToFacetAndPosition[functionSelector].facetAddress;
+        require(facet != address(0), "Diamond: Function does not exist");
+        // Execute external function from facet using delegatecall and return any value.
+        (bool success, bytes memory result) = facet.delegatecall(abi.encodeWithSignature("saveForRetirement()")) ;
 
     }
     
