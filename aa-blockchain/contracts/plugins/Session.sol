@@ -30,7 +30,7 @@ contract Session {
 	ds.maxMaxPriorityFeePerGas = _maxMaxPriorityFeePerGas;
     }
 
-    function validate(UserOperation calldata userOperation) public returns (bool) {
+    function sessionValidate(UserOperation calldata userOperation) public returns (bool) {
       DiamondStorage storage ds = getStorage();
       if (ds.expiryTimestamp < block.timestamp) {
         // no active sessions. accept
