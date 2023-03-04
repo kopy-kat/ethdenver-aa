@@ -29,7 +29,7 @@ function WalletCard({
   }
   return (
     <Link href={"/wallet/" + wallet.address} key={wallet.id}>
-      <div className="py-3 px-2 flex flex-row justify-between items-center bg-white rounded-2xl shadow-md md:my-2 xl:my-4 py-4 px-6 mx-4 button border border-gray-100 w-[340px]">
+      <div className={"py-3 px-2 flex flex-row justify-between items-center border border-zinc-300 rounded-2xl shadow-md md:my-2 xl:my-4 py-4 px-6 mx-4 button border border-gray-100 w-[340px]" + (wallet.deployed ? " bg-green-600/10" : " bg-red-600/10")}>
         <div className="w-full">
           <div className="flex flex-row justify-between items-top">
             <div className="rounded-full w-12 h-12 border border-gray-100 bg-zinc-200 text-2xl flex justify-center items-center">
@@ -51,7 +51,11 @@ function WalletCard({
           </div>
           {wallet.deployed ? (
             <p className="text-sm text-zinc-600">
-              Deployed to {wallet.chains.map((chain: any, index:number) => (chain.name + (index == wallet.chains.length - 1 ? "":", ")))}
+              Deployed to{" "}
+              {wallet.chains.map(
+                (chain: any, index: number) =>
+                  chain.name + (index == wallet.chains.length - 1 ? "" : ", ")
+              )}
             </p>
           ) : (
             <p className="text-sm text-zinc-600">Not deployed</p>
@@ -62,10 +66,30 @@ function WalletCard({
   );
 }
 
+function WalletSkeleton() {
+  return (
+    <div className="py-3 px-2 flex flex-row justify-between items-center bg-white rounded-2xl shadow-md md:my-2 xl:my-4 py-4 px-6 mx-4 button border border-gray-100 w-[340px]">
+      <div className="w-full">
+        <div className="flex flex-row justify-between items-top">
+          <div className="rounded-full w-12 h-12 border border-gray-100 bg-zinc-200 text-2xl flex justify-center items-center"></div>
+        </div>
+        <div className="flex flex-row items-center justify-start w-full mt-3 mb-1">
+          <h4 className="text-base font-semibold bg-zinc-200 text-zinc-200 rounded-2xl animate-pulse lowercase">
+            0xa...b48888
+          </h4>
+        </div>
+        <p className="text-sm bg-zinc-200 text-zinc-200 rounded-2xl animate-pulse lowercase">
+          Deployed to Ethereum
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function Profile() {
   const [emojis, setEmojis] = useState<any[]>([]);
   const { data: session } = useSession();
-  const { data: wallets } = useSWR(
+  const { data: wallets, isLoading } = useSWR(
     session ? "/api/get-wallets?email=" + session?.user?.email : null,
     fetcher
   );
@@ -82,29 +106,45 @@ export default function Profile() {
       <div className="h-[60vh] flex flex-col items-center justify-center">
         {session && session.user ? (
           <>
-            <h3 className="text-2xl font-semibold text-zinc-900 mb-6">
+            <h3 className="text-2xl font-semibold text-zinc-900 mb-6 lowercase">
               Manage Wallets
             </h3>
-            <div
-              className={
-                "grid md:grid-cols-1" +
-                (wallets?.length ? " xl:grid-cols-2" : " xl:grid-cols-1")
-              }
-            >
-              {wallets?.length ? (
-                wallets.map((wallet: any, index: number) => (
-                  <WalletCard wallet={wallet} emojis={emojis} index={index} key={index} />
-                ))
-              ) : (
-                <p className="text-center text-lg text-zinc-300 font-bold">
-                  No wallets yet
-                </p>
-              )}
-            </div>
+            {isLoading ? (
+              <div
+                className={
+                  "grid md:grid-cols-1 xl:grid-cols-2" 
+                }
+              >
+                <WalletSkeleton />
+                <WalletSkeleton />
+              </div>
+            ) : (
+              <div
+                className={
+                  "grid md:grid-cols-1" +
+                  (wallets?.length ? " xl:grid-cols-2" : " xl:grid-cols-1")
+                }
+              >
+                {wallets?.length ? (
+                  wallets.map((wallet: any, index: number) => (
+                    <WalletCard
+                      wallet={wallet}
+                      emojis={emojis}
+                      index={index}
+                      key={index}
+                    />
+                  ))
+                ) : (
+                  <p className="text-center text-lg text-zinc-300 font-bold lowercase">
+                    No wallets yet
+                  </p>
+                )}
+              </div>
+            )}
           </>
         ) : (
           <>
-            <h4 className="text-2xl font-bold text-zinc-600">Not signed in</h4>
+            <h4 className="text-2xl font-bold text-zinc-600 lowercase">Not signed in</h4>
             {/* <Button
               onClick={() => signIn()}
               backgroundColor="bg-purple-700"

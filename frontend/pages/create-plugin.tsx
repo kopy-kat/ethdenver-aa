@@ -27,7 +27,7 @@ export default function CreatePlugin() {
       const formattedChainsReturn = chains.map((chain: any) => {
         return {
           value: chain.id,
-          label: chain.name,
+          label: chain.name.toLowerCase(),
         };
       });
       setFormattedChains(formattedChainsReturn);
@@ -39,7 +39,7 @@ export default function CreatePlugin() {
       const formattedCategoriessReturn = categories.map((category: any) => {
         return {
           value: category.id,
-          name: category.name,
+          name: category.name.toLowerCase(),
         };
       });
       setFormattedCategories(formattedCategoriessReturn);
@@ -121,38 +121,38 @@ export default function CreatePlugin() {
           <Stepper
             stepperElements={[
               {
-                heading: "Details",
+                heading: "details",
                 form: (
                   <div className="flex flex-col mt-8 w-[40vw] justify-center">
                     <div className="flex flex-col my-4 w-3/4 mx-auto">
                       <InputForm
-                        label="Name"
+                        label="name"
                         inputType="text"
-                        placeholder="Multi Factor Authentication"
+                        placeholder="multi factor authentication"
                         inputName="name"
                         requiredStar
                       />
                     </div>
                     <div className="flex flex-col my-4 w-3/4 mx-auto">
                       <InputForm
-                        label="One Liner"
+                        label="one liner"
                         inputType="text"
-                        placeholder="This plugin allows you to secure your wallet with 2FA."
+                        placeholder="this plugin allows you to secure your wallet with 2fa."
                         inputName="oneLiner"
                         requiredStar
                       />
                     </div>
                     <div className="flex flex-col my-4 w-3/4 mx-auto">
                       <TextareaForm
-                        label="Description"
-                        placeholder="A detailed description of the plugin."
+                        label="description"
+                        placeholder="a detailed description of the plugin."
                         inputName="description"
                         requiredStar
                       />
                     </div>
                     <div className="flex flex-col my-4 w-3/4 mx-auto">
                       <InputForm
-                        label="Version"
+                        label="version"
                         inputType="text"
                         placeholder="0.0.1"
                         inputName="version"
@@ -161,9 +161,9 @@ export default function CreatePlugin() {
                     </div>
                     <div className="flex flex-col my-4 w-3/4 mx-auto">
                       <InputForm
-                        label="Icon URL"
+                        label="icon url"
                         inputType="text"
-                        placeholder="An optional url of an icon to be displayed to the user."
+                        placeholder="an optional url of an icon to be displayed to the user."
                         inputName="icon"
                       />
                     </div>
@@ -171,12 +171,12 @@ export default function CreatePlugin() {
                 ),
               },
               {
-                heading: "Plugin Code",
+                heading: "plugin code",
                 form: (
                   <div className="flex flex-col mt-8 w-[40vw] justify-center">
                     <div className="flex flex-col my-4 w-3/4 mx-auto">
                       <InputForm
-                        label="Contract Name"
+                        label="contract name"
                         inputType="text"
                         placeholder="MFA.sol"
                         inputName="codeName"
@@ -185,9 +185,9 @@ export default function CreatePlugin() {
                     </div>
                     <div className="flex flex-col my-4 w-3/4 mx-auto">
                       <InputForm
-                        label="Code URL"
+                        label="code rul"
                         inputType="text"
-                        placeholder="URL to a repository containing the plugin code."
+                        placeholder="url to a repository containing the plugin code."
                         inputName="codeUrl"
                         requiredStar
                       />
@@ -205,7 +205,7 @@ export default function CreatePlugin() {
                     </div>
                     <div className="flex flex-col my-4 w-3/4 mx-auto">
                       <InputForm
-                        label="Code Version"
+                        label="code Vvrsion"
                         inputType="text"
                         placeholder="0.0.1"
                         inputName="codeVersion"
@@ -216,12 +216,12 @@ export default function CreatePlugin() {
                 ),
               },
               {
-                heading: "Plugin Metadata",
+                heading: "plugin metadata",
                 form: (
                   <div className="flex flex-col mt-8 w-[40vw] justify-center">
                     <div className="flex flex-col my-4 w-3/4 mx-auto">
                       <InputForm
-                        label="Deployed Contract Address"
+                        label="deployed contract address"
                         inputType="text"
                         placeholder="0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
                         inputName="contractAddress"
@@ -230,15 +230,15 @@ export default function CreatePlugin() {
                     </div>
                     <div className="flex flex-col my-4 w-3/4 mx-auto">
                       <InputForm
-                        label="Tipping Address"
+                        label="tipping address"
                         inputType="text"
-                        placeholder="An optional address to receive tips for the plugin."
+                        placeholder="an optional address to receive tips for the plugin."
                         inputName="tippingAddress"
                       />
                     </div>
                     <div className="flex flex-col my-4 w-3/4 mx-auto">
                       <DropdownForm
-                        label="Plugin Category"
+                        label="plugin category"
                         options={formattedCategories}
                         inputName="pluginCategoryId"
                         requiredStar
@@ -246,7 +246,7 @@ export default function CreatePlugin() {
                     </div>
                     <div className="flex flex-col my-4 w-3/4 mx-auto">
                       <MultiselectForm
-                        label="Deployed Chain(s)"
+                        label="deployed chain(s)"
                         options={formattedChains}
                         inputName="chains"
                         requiredStar
@@ -258,23 +258,23 @@ export default function CreatePlugin() {
                         onClick={() => {}}
                         backgroundColor="bg-purple-600"
                         textColor="text-white"
-                        additionalClasses="px-4 py-1"
+                        additionalClasses="px-4 py-1 lowercase"
                         loading={creationLoading}
                       >
                         Create plugin
                       </Button>
                       {formError && (
-                        <p className="text-red-500 text-sm mt-2 text-center">
+                        <p className="text-red-500 text-sm mt-2 text-center lowercase">
                           Please fill in all required fields
                         </p>
                       )}
                       {creationError && (
-                        <p className="text-red-500 text-sm mt-2 text-center">
+                        <p className="text-red-500 text-sm mt-2 text-center lowercase">
                           Error creating plugin
                         </p>
                       )}
                       {creationSuccess && (
-                        <p className="text-green-600 text-sm mt-2 text-center">
+                        <p className="text-green-600 text-sm mt-2 text-center lowercase">
                           Plugin created successfully
                         </p>
                       )}
