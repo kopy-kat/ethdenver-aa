@@ -29,16 +29,7 @@ error FunctionNotFound(bytes4 _functionSelector);
 contract AccountFacet is BaseAccount {
     using ECDSA for bytes32;
 
-    //filler member, to push the nonce and owner to the same slot
-    // the "Initializeble" class takes 2 bytes in the first slot
-    // bytes28 private _filler;
-
-    // //explicit sizes of nonce, to fit a single storage cell with "owner"
-    // uint96 private _nonce;
-    // address public owner;
-
-    // IEntryPoint private immutable _entryPoint;
-
+   
     event SimpleAccountInitialized(IEntryPoint indexed entryPoint, address indexed owner);
 
 
@@ -47,12 +38,6 @@ contract AccountFacet is BaseAccount {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         return ds.nonce;
     }
-
-    
-
-
-    // solhint-disable-next-line no-empty-blocks
-    receive() external payable {}
 
     
     /**
@@ -101,20 +86,7 @@ contract AccountFacet is BaseAccount {
         }
     }
 
-    /**
-     * @dev The _entryPoint member is immutable, to reduce gas consumption.  To upgrade EntryPoint,
-     * a new implementation of SimpleAccount must be deployed with the new EntryPoint address, then upgrading
-      * the implementation by calling `upgradeTo()`
-     */
-    // function initialize(address anOwner) public virtual initializer {
-    //     _initialize(anOwner);
-    // }
-
-    // function _initialize(address anOwner) internal virtual {
-    //     owner = anOwner;
-    //     emit SimpleAccountInitialized(_entryPoint, owner);
-    // }
-
+  
 
 
     /// implement template method of BaseAccount
@@ -127,13 +99,25 @@ contract AccountFacet is BaseAccount {
     function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
     internal override virtual returns (uint256 validationData) {
 
-        // TODO change this to a verification facet - NEVER VERIFIED
-        // address verificationFacet;
-        // verifationFacet.delegatecall(abicoder.encodeWithSignature("verify(address,bytes32,bytes)", userOp.signer, userOpHash, userOp.signature));
+        
+        LibDiamond.DiamondStorage storage ds;
+        bytes32 position = LibDiamond.DIAMOND_STORAGE_POSITION;
+        // get diamond storage
+        assembly {
+            ds.slot := position
+        }
 
+        // check validation with Session facet
+        bytes4 functionSelector = LibDiamond.getSelector("sessionValidate((address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes))");
+        address facet = ds.selectorToFacetAndPosition[functionSelector].facetAddress;
+        require(facet != address(0), "Diamond: Function does not exist");
+        // Execute external function from facet using delegatecall and return any value.
+        (bool success, bytes memory data) = facet.delegatecall(abi.encodeWithSignature("saveForRetirement()", userOp)) ;
+        // decode output to bool
+        bool isValid = abi.decode(data, (bool));
+        // validationData is 0 if valid, 1 if invalid
+        validationData  = isValid ? 0 : 1;
 
-
-        return 1;
     }
 
     function _call(address target, uint256 value, bytes memory data) internal {
@@ -145,7 +129,7 @@ contract AccountFacet is BaseAccount {
         }
     }
 
-    function postRecieve() external payable returns(uint) {
+    function postRecieve() external payable {
         // recieve functions
         // call the saveForRetirment facet
         LibDiamond.DiamondStorage storage ds;

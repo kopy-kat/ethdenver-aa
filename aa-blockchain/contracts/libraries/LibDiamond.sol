@@ -244,7 +244,7 @@ library LibDiamond {
     }
 
 
-    function getSelector(string calldata _func) external pure returns (bytes4) {
+    function getSelector(string memory _func) internal pure returns (bytes4) {
         return bytes4(keccak256(bytes(_func)));
     }
 }
