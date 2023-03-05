@@ -33,7 +33,8 @@ The supported networks are (deployed diamond account contract address):
 - Mumbai (0xf72351eeeF9A498066cCb89Bc4D37c0e2fd47691)
 - Base Goerli (0xf72351eeeF9A498066cCb89Bc4D37c0e2fd47691)
 - Scroll Alpha testnet (0xf72351eeeF9A498066cCb89Bc4D37c0e2fd47691)
-- zkSync (0x500F0d4e3050e58E74AAD70026690274Ae01890E)
+- zkSync (0x500F0d4e3050e58E74AAD70026690274Ae01890E)  
+
 The network names can be found in aa-blockchain/hardhat.config.js
 
 
