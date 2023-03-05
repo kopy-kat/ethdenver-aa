@@ -15,7 +15,7 @@ export function Header() {
         <div className="flex justify-between items-center">
           <div className="flex-1 flex justify-start items-center">
             <Link href="/" className="font-bold text-2xl">
-              diamond wallet
+              rhinestone
             </Link>
           </div>
           <div className="flex items-center">
