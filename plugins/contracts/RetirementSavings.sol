@@ -1,3 +1,6 @@
+/// @title RetirementSavings
+/// @notice This contract allows users to save a percentage of their funds towards retirement savings
+/// @dev This contract uses the Diamond standard library to enable modular and upgradeable contracts.
 pragma solidity ^0.8.0;
 import { LibDiamond } from "./libraries/LibDiamond.sol";
 
