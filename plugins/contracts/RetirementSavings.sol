@@ -8,6 +8,7 @@ import { LibDiamond } from "./libraries/LibDiamond.sol";
 contract RetirementSavings {
 
     struct DiamondStorage {
+        /// @notice Struct to store the percentage, savedAmount, and retirementAccount of funds
         uint256 percentage;
         uint256 savedAmount;
         address retirementAccount;
@@ -15,6 +16,7 @@ contract RetirementSavings {
 
     }
 
+    /// @dev Function to retrieve the DiamondStorage struct from storage
     function getStorage() DiamondStorage internal pure returns (DiamondStorage storage ds) {
         bytes32 position = keccak256("diamond.standard.retirementSavings");
         assembly {
@@ -22,6 +24,9 @@ contract RetirementSavings {
         }
     }
 
+    /// @notice Set the percentage of funds that should be saved towards retirement and the retirement account to save to
+    /// @param _percentage The percentage of funds to save
+    /// @param retirementAddress The address to save the funds to
     function setRetirementValues(uint256 _percentage, address retirementAddress) public {
         LibDiamond.enforceIsEntryPoint();
         DiamondStorage storage ds = getStorage();
@@ -29,6 +34,7 @@ contract RetirementSavings {
         ds.retirementAddress = retirementAddress;
     }
     
+    /// @notice Save funds towards retirement
     function save() external payable {
         // don't think this is needed anyway 
         LibDiamond.enforceIsEntryPoint();
