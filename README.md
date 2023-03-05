@@ -13,6 +13,8 @@ Hackers from Oxford Blockchain Society - with funding and support from EduDAO an
 
 ### Smart Contract Deployment
 
+Networks with lower gas costs are preferred (such as Polygon, or other L2s), as the infrastrucutre involves complex smart contracts which entail higher gas costs for execution.
+
 ### zksync
 
 Smart contracts can be compiled and deployed using the following commands 
