@@ -54,7 +54,7 @@ Secondly, all smart contract wallets to date lock users into using a specific in
 
 Finally, because all smart contract wallet implementations are pretty much building their entire infrastructure from the ground up, a large part of the engineering work happening in the space is duplicated. The promise is that this will improve using the ERC-4337 standard, meaning the teams will not need to build the infrastructure (e.g. bundler/relayer, etc) but can focus on the implementation. However, so far, it seems that most teams have spent most of their engineering efforts on implementing the user interface and basic features, such as email recovery or batch transactions.
 
-### Solution
+### Solution
 
 The dream solution to these problems is infrastructure for smart contract wallets that allows them to be simple, custom and modular. Firstly, the dream solution should be easy for anyone to use, even with very little understanding of Ethereum and the ERC-4337 infrastructure. Secondly, the user should be able to choose all the features that they want and not be required to use features that they do not want. Finally, and related to the second point, features should be easy to select and edit, as well as being easy for developers to build.
 
