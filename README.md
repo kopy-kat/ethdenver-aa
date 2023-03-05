@@ -28,11 +28,12 @@ For all other networks, the following commands can be run:
 ```shell
 npx hardhat run deploy/deploy.js --network {network_name}
 ```
-The supported networks are:
-- Goerli testnet (using tenderly web3 gateway)
-- Mumbai
-- Base Goerli
-- Scroll Alpha testnet
+The supported networks are (deployed diamond account contract address):
+- Goerli testnet, using tenderly web3 gateway  (0xf72351eeeF9A498066cCb89Bc4D37c0e2fd47691)
+- Mumbai (0xf72351eeeF9A498066cCb89Bc4D37c0e2fd47691)
+- Base Goerli (0xf72351eeeF9A498066cCb89Bc4D37c0e2fd47691)
+- Scroll Alpha testnet (0xf72351eeeF9A498066cCb89Bc4D37c0e2fd47691)
+- zkSync (0x500F0d4e3050e58E74AAD70026690274Ae01890E)
 The network names can be found in aa-blockchain/hardhat.config.js
 
 
