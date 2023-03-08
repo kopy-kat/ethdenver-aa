@@ -31,7 +31,7 @@ export function Layout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="pt-14 transition-position max-w-screen min-h-screen bg-gray-50 hidden md:flex flex-row">
+      {/* <div className="pt-14 transition-position max-w-screen min-h-screen bg-gray-50 hidden md:flex flex-row">
         <main className="w-[100vw] flex flex-col">
           <section className="container flex-grow mx-auto">
             <section className="mx-auto">
@@ -46,8 +46,11 @@ export function Layout({
             <Footer />
           </section>
         </main>
+      </div> */}
+      <div className="h-screen w-screen flex justify-center items-center bg-gray-100 text-xl lowercase">
+        Coming soon
       </div>
-      <div className="md:hidden h-screen w-screen flex justify-center items-center bg-gray-100 text-xl">
+      <div className="md:hidden h-screen w-screen flex justify-center items-center bg-gray-100 text-xl lowercase">
         No mobile support yet
       </div>
     </main>
