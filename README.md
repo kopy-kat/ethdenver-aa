@@ -30,7 +30,7 @@ npx hardhat deploy-zksync --script deploy_zksync.js --network zkSyncTestnet
 ### EVM networks
 For all other networks, the following commands can be run:
 ```shell
-npx hardhat run deploy/deploy.js --network {network_name}
+npx hardhat run scripts/deploy.js --network {network_name}
 ```
 The supported networks are (deployed diamond account contract address):
 - Goerli testnet, using tenderly web3 gateway  (0xf72351eeeF9A498066cCb89Bc4D37c0e2fd47691)
