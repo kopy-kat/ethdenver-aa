@@ -1,5 +1,5 @@
-# ethdenver-aa
-The first modular implementation of Account Abstraction (ERC4337) using (modified) Diamond Proxies (ERC2535).
+# ETHDenver Diamond Account
+The first modular implementation of Account Abstraction (ERC4337) using (modified) Diamond Proxies (ERC-2535).
 
 ![photo_2023-03-05 10 45 00](https://user-images.githubusercontent.com/8796522/222976894-8368fcfa-cefb-4d62-b75b-8a877322510f.jpeg)
 
@@ -11,6 +11,9 @@ Hackers from Oxford Blockchain Society - with funding and support from EduDAO an
 - Konrad Kopp
 - Mohamed Baioumy
 - Ollie Turnbull
+
+## Continued work
+Starting with this PoC, we have continued developing novel projects and tools in the modular account abstraction ecosystem that this submission kickedstarted. To keep track of our progress, check out and follow [rhinestone](https://github.com/rhinestonewtf).
 
 ## Installation
 
